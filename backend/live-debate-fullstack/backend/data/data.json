@@ -1,0 +1,324 @@
+{
+  "streams" : [ {
+    "id" : "stream-001",
+    "name" : "主直播间",
+    "url" : "http://192.168.31.189:8086/live/stream1.m3u8",
+    "type" : "hls",
+    "description" : "主辩论直播间",
+    "enabled" : true,
+    "streamUrl" : "http://192.168.31.189:8086/live/stream1.m3u8",
+    "createdAt" : [ 2026, 4, 3, 19, 1, 30, 411442300 ],
+    "updatedAt" : [ 2026, 4, 3, 19, 1, 30, 411442300 ]
+  }, {
+    "id" : "stream-002",
+    "name" : "测试直播间",
+    "url" : "http://192.168.31.189:8086/live/stream2.m3u8",
+    "type" : "hls",
+    "description" : "测试用直播间",
+    "enabled" : true,
+    "streamUrl" : "http://192.168.31.189:8086/live/stream2.m3u8",
+    "createdAt" : [ 2026, 4, 3, 19, 1, 30, 411442300 ],
+    "updatedAt" : [ 2026, 4, 3, 19, 1, 30, 411442300 ]
+  } ],
+  "votes" : {
+    "default" : {
+      "leftVotes" : 0,
+      "rightVotes" : 0,
+      "totalVotes" : 0,
+      "leftPercentage" : 50,
+      "rightPercentage" : 50
+    },
+    "stream-001" : {
+      "leftVotes" : 90,
+      "rightVotes" : 10,
+      "totalVotes" : 100,
+      "leftPercentage" : 90,
+      "rightPercentage" : 10
+    },
+    "test" : {
+      "leftVotes" : 60,
+      "rightVotes" : 40,
+      "totalVotes" : 100,
+      "leftPercentage" : 60,
+      "rightPercentage" : 40
+    }
+  },
+  "aiContents" : [ {
+    "id" : "ai-3f36c22f",
+    "debateId" : "debate-001",
+    "text" : "痛苦是人生成长的必要经历，消除痛苦会让我们失去学习和成长的机会。",
+    "side" : "left",
+    "timestamp" : [ 2026, 4, 3, 19, 1, 30, 412628600 ],
+    "comments" : [ {
+      "id" : "comment-78fb0628",
+      "userId" : "user-0",
+      "nickname" : "Kenia Cremin II",
+      "avatar" : "https://s3.amazonaws.com/uifaces/faces/twitter/ponchomendivil/128.jpg",
+      "content" : "Minima modi eos debitis quia maiores ea voluptatem.",
+      "likes" : 16,
+      "timestamp" : [ 2026, 4, 3, 19, 1, 30, 473243500 ]
+    }, {
+      "id" : "comment-308a029d",
+      "userId" : "user-1",
+      "nickname" : "Carey Becker",
+      "avatar" : "https://s3.amazonaws.com/uifaces/faces/twitter/dcalonaci/128.jpg",
+      "content" : "Aut cum possimus qui nisi error quis repellat.",
+      "likes" : 22,
+      "timestamp" : [ 2026, 4, 3, 18, 59, 30, 474404000 ]
+    }, {
+      "id" : "comment-45c6d4f9",
+      "userId" : "user-0f5158",
+      "nickname" : "test",
+      "avatar" : "??",
+      "content" : "test",
+      "likes" : 0,
+      "timestamp" : [ 2026, 4, 5, 17, 12, 30, 236627500 ]
+    } ],
+    "likes" : 74,
+    "statistics" : {
+      "views" : 0,
+      "likes" : 0,
+      "comments" : 0
+    },
+    "streamId" : "stream-001"
+  }, {
+    "id" : "ai-5cb99404",
+    "debateId" : "debate-001",
+    "text" : "痛苦让我们学会同理心，如果所有人都没有痛苦经历，我们如何理解他人的苦难？",
+    "side" : "left",
+    "timestamp" : [ 2026, 4, 3, 18, 56, 30, 474404000 ],
+    "comments" : [ {
+      "id" : "comment-7d89b646",
+      "userId" : "user-0",
+      "nickname" : "Dolly Strosin",
+      "avatar" : "https://s3.amazonaws.com/uifaces/faces/twitter/peachananr/128.jpg",
+      "content" : "Rerum et neque.",
+      "likes" : 12,
+      "timestamp" : [ 2026, 4, 3, 19, 1, 30, 475026100 ]
+    }, {
+      "id" : "comment-4584949c",
+      "userId" : "user-1",
+      "nickname" : "Georgene Krajcik",
+      "avatar" : "https://s3.amazonaws.com/uifaces/faces/twitter/jagan123/128.jpg",
+      "content" : "Tempore ut repellendus facilis ipsam porro voluptate.",
+      "likes" : 29,
+      "timestamp" : [ 2026, 4, 3, 18, 59, 30, 475619200 ]
+    } ],
+    "likes" : 21,
+    "statistics" : {
+      "views" : 0,
+      "likes" : 0,
+      "comments" : 0
+    },
+    "streamId" : "stream-001"
+  }, {
+    "id" : "ai-400e5322",
+    "debateId" : "debate-001",
+    "text" : "痛苦让我们珍惜快乐，没有对比就没有真正的幸福。",
+    "side" : "left",
+    "timestamp" : [ 2026, 4, 3, 18, 51, 30, 475619200 ],
+    "comments" : [ {
+      "id" : "comment-7fc7343a",
+      "userId" : "user-0",
+      "nickname" : "Ismael Gutkowski IV",
+      "avatar" : "https://s3.amazonaws.com/uifaces/faces/twitter/gauravjassal/128.jpg",
+      "content" : "Nesciunt inventore quas qui beatae eos dolorem.",
+      "likes" : 23,
+      "timestamp" : [ 2026, 4, 3, 19, 1, 30, 476803000 ]
+    }, {
+      "id" : "comment-69d0f0e0",
+      "userId" : "user-1",
+      "nickname" : "Albert Hills",
+      "avatar" : "https://s3.amazonaws.com/uifaces/faces/twitter/itolmach/128.jpg",
+      "content" : "Magni ea soluta officia velit quo.",
+      "likes" : 16,
+      "timestamp" : [ 2026, 4, 3, 18, 59, 30, 477383800 ]
+    } ],
+    "likes" : 54,
+    "statistics" : {
+      "views" : 0,
+      "likes" : 0,
+      "comments" : 0
+    },
+    "streamId" : "stream-001"
+  }, {
+    "id" : "ai-73c96fa4",
+    "debateId" : "debate-001",
+    "text" : "如果所有人都按这个按钮，社会会变成什么样？",
+    "side" : "left",
+    "timestamp" : [ 2026, 4, 3, 18, 46, 30, 477383800 ],
+    "comments" : [ {
+      "id" : "comment-70336bf9",
+      "userId" : "user-0",
+      "nickname" : "Herman Jakubowski",
+      "avatar" : "https://s3.amazonaws.com/uifaces/faces/twitter/jayrobinson/128.jpg",
+      "content" : "Sequi corrupti rem autem quia nisi est.",
+      "likes" : 18,
+      "timestamp" : [ 2026, 4, 3, 19, 1, 30, 477963700 ]
+    }, {
+      "id" : "comment-5c421a7c",
+      "userId" : "user-1",
+      "nickname" : "Keli Runolfsdottir",
+      "avatar" : "https://s3.amazonaws.com/uifaces/faces/twitter/kianoshp/128.jpg",
+      "content" : "Non dolor consequatur nihil dignissimos dignissimos aliquid qui.",
+      "likes" : 10,
+      "timestamp" : [ 2026, 4, 3, 18, 59, 30, 478542100 ]
+    } ],
+    "likes" : 26,
+    "statistics" : {
+      "views" : 0,
+      "likes" : 0,
+      "comments" : 0
+    },
+    "streamId" : "stream-001"
+  }, {
+    "id" : "ai-38b9aae9",
+    "debateId" : "debate-001",
+    "text" : "如果能够消除痛苦，为什么不呢？痛苦本身没有价值。",
+    "side" : "right",
+    "timestamp" : [ 2026, 4, 3, 18, 59, 30, 479121600 ],
+    "comments" : [ {
+      "id" : "comment-cdc67690",
+      "userId" : "user-0",
+      "nickname" : "Darryl Beer",
+      "avatar" : "https://s3.amazonaws.com/uifaces/faces/twitter/psaikali/128.jpg",
+      "content" : "Soluta consectetur aspernatur saepe ex sed dolores.",
+      "likes" : 11,
+      "timestamp" : [ 2026, 4, 3, 19, 1, 30, 479760600 ]
+    }, {
+      "id" : "comment-edfba2e9",
+      "userId" : "user-1",
+      "nickname" : "Jamey Hane",
+      "avatar" : "https://s3.amazonaws.com/uifaces/faces/twitter/iduuck/128.jpg",
+      "content" : "Ratione ducimus quos voluptatibus et vitae voluptates.",
+      "likes" : 17,
+      "timestamp" : [ 2026, 4, 3, 18, 59, 30, 480364400 ]
+    } ],
+    "likes" : 56,
+    "statistics" : {
+      "views" : 0,
+      "likes" : 0,
+      "comments" : 0
+    },
+    "streamId" : "stream-001"
+  }, {
+    "id" : "ai-85832977",
+    "debateId" : "debate-001",
+    "text" : "现代医学已经在消除很多痛苦，这个按钮只是技术的延伸。",
+    "side" : "right",
+    "timestamp" : [ 2026, 4, 3, 18, 54, 30, 480364400 ],
+    "comments" : [ {
+      "id" : "comment-f8ed110d",
+      "userId" : "user-0",
+      "nickname" : "Hertha Legros",
+      "avatar" : "https://s3.amazonaws.com/uifaces/faces/twitter/lingeswaran/128.jpg",
+      "content" : "Aut est eos excepturi pariatur.",
+      "likes" : 29,
+      "timestamp" : [ 2026, 4, 3, 19, 1, 30, 480936500 ]
+    }, {
+      "id" : "comment-29f49955",
+      "userId" : "user-1",
+      "nickname" : "Esteban Baumbach Jr.",
+      "avatar" : "https://s3.amazonaws.com/uifaces/faces/twitter/brunodesign1206/128.jpg",
+      "content" : "Distinctio et eaque distinctio.",
+      "likes" : 27,
+      "timestamp" : [ 2026, 4, 3, 18, 59, 30, 481520600 ]
+    } ],
+    "likes" : 69,
+    "statistics" : {
+      "views" : 0,
+      "likes" : 0,
+      "comments" : 0
+    },
+    "streamId" : "stream-001"
+  }, {
+    "id" : "ai-334434b6",
+    "debateId" : "debate-001",
+    "text" : "每个人都有自己的选择权，不应该强迫别人承受痛苦。",
+    "side" : "right",
+    "timestamp" : [ 2026, 4, 3, 18, 49, 30, 482109200 ],
+    "comments" : [ {
+      "id" : "comment-09831272",
+      "userId" : "user-0",
+      "nickname" : "Letitia Douglas",
+      "avatar" : "https://s3.amazonaws.com/uifaces/faces/twitter/foczzi/128.jpg",
+      "content" : "Unde incidunt illo dolorem.",
+      "likes" : 15,
+      "timestamp" : [ 2026, 4, 3, 19, 1, 30, 482703900 ]
+    }, {
+      "id" : "comment-fbeeef83",
+      "userId" : "user-1",
+      "nickname" : "Maryann Sporer II",
+      "avatar" : "https://s3.amazonaws.com/uifaces/faces/twitter/abdulhyeuk/128.jpg",
+      "content" : "Molestias rerum sit.",
+      "likes" : 28,
+      "timestamp" : [ 2026, 4, 3, 18, 59, 30, 483309400 ]
+    } ],
+    "likes" : 73,
+    "statistics" : {
+      "views" : 0,
+      "likes" : 0,
+      "comments" : 0
+    },
+    "streamId" : "stream-001"
+  }, {
+    "id" : "ai-40456f25",
+    "debateId" : "debate-001",
+    "text" : "我们可以通过其他方式培养同理心，比如阅读、教育。",
+    "side" : "right",
+    "timestamp" : [ 2026, 4, 3, 18, 44, 30, 483309400 ],
+    "comments" : [ {
+      "id" : "comment-35e3ab8f",
+      "userId" : "user-0",
+      "nickname" : "Alexander Grant",
+      "avatar" : "https://s3.amazonaws.com/uifaces/faces/twitter/akashsharma39/128.jpg",
+      "content" : "Est sed est molestiae qui.",
+      "likes" : 11,
+      "timestamp" : [ 2026, 4, 3, 19, 1, 30, 483897100 ]
+    }, {
+      "id" : "comment-b34e45ff",
+      "userId" : "user-1",
+      "nickname" : "Mr. Nita Deckow",
+      "avatar" : "https://s3.amazonaws.com/uifaces/faces/twitter/craigelimeliah/128.jpg",
+      "content" : "Minus ut sint et in.",
+      "likes" : 22,
+      "timestamp" : [ 2026, 4, 3, 18, 59, 30, 485084300 ]
+    } ],
+    "likes" : 36,
+    "statistics" : {
+      "views" : 0,
+      "likes" : 0,
+      "comments" : 0
+    },
+    "streamId" : "stream-001"
+  } ],
+  "liveStatus" : {
+    "stream-001" : true,
+    "stream-002" : true
+  },
+  "debateTopic" : {
+    "id" : "debate-001",
+    "title" : "如果有一个能一键消除痛苦的按钮，你会按吗？",
+    "description" : "这是一个关于痛苦、成长与人性选择的深度辩论",
+    "leftPosition" : "会按",
+    "rightPosition" : "不会按"
+  },
+  "recordings" : [ {
+    "id" : "recording-3da15874",
+    "objectKey" : "video/屏幕录制 2026-04-04 160829.mp4",
+    "filename" : "屏幕录制 2026-04-04 160829.mp4",
+    "title" : "屏幕录制 2026-04-04 160829.mp4",
+    "description" : "从Minio自动发现的录播文件",
+    "duration" : 3600,
+    "size" : 64895198,
+    "width" : 1920,
+    "height" : 1080,
+    "format" : "mp4",
+    "bucket" : "recordings",
+    "enabled" : true,
+    "streamId" : "stream-001",
+    "createdAt" : [ 2026, 4, 4, 17, 5, 9, 389781300 ],
+    "updatedAt" : [ 2026, 4, 4, 17, 5, 9, 389781300 ],
+    "playUrl" : "http://localhost:9000/recordings/video/%E5%B1%8F%E5%B9%95%E5%BD%95%E5%88%B6%202026-04-04%20160829.mp4?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=admin%2F20260405%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20260405T121838Z&X-Amz-Expires=604800&X-Amz-SignedHeaders=host&X-Amz-Signature=fb192069a28fdeb8515688f1e47a3dae370a19dfa08feb92726030a0b1515d38"
+  } ]
+}
