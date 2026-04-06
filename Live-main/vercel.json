@@ -7,6 +7,10 @@
       "config": {
         "maxDuration": 30
       }
+    },
+    {
+      "src": "unpackage/dist/build/h5/**/*",
+      "use": "@vercel/static"
     }
   ],
   "routes": [
@@ -34,13 +38,18 @@
     },
     {
       "src": "/(.*)",
-      "dest": "server.js"
+      "dest": "/unpackage/dist/build/h5/$1",
+      "headers": {
+        "Cache-Control": "s-maxage=3600, stale-while-revalidate"
+      }
     }
   ],
   "env": {
     "NODE_ENV": "production",
-    "PORT": "8080"
+    "PORT": "8080",
+    "VERCEL": "true"
   },
   "buildCommand": "npm ci && npm run build:h5",
-  "installCommand": "npm ci"
+  "installCommand": "npm ci",
+  "outputDirectory": "unpackage/dist/build/h5"
 }
