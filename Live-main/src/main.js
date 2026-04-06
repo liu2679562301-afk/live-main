@@ -12,7 +12,7 @@ if (typeof global === 'undefined') {
   }
 }
 
-import App from './App'
+import App from './App.vue'
 import IconFont from './components/IconFont/IconFont.vue'
 
 // #ifndef VUE3

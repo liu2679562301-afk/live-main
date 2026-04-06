@@ -7,10 +7,6 @@
       "config": {
         "maxDuration": 30
       }
-    },
-    {
-      "src": "unpackage/dist/build/h5/**/*",
-      "use": "@vercel/static"
     }
   ],
   "routes": [
@@ -29,19 +25,12 @@
       "dest": "server.js"
     },
     {
-      "src": "/live/(.*)",
-      "dest": "server.js"
-    },
-    {
       "src": "/static/(.*)",
       "dest": "server.js"
     },
     {
       "src": "/(.*)",
-      "dest": "/unpackage/dist/build/h5/$1",
-      "headers": {
-        "Cache-Control": "s-maxage=3600, stale-while-revalidate"
-      }
+      "dest": "server.js"
     }
   ],
   "env": {
@@ -49,7 +38,7 @@
     "PORT": "8080",
     "VERCEL": "true"
   },
-  "buildCommand": "npm ci && npm run build:h5",
-  "installCommand": "npm ci",
+  "buildCommand": "npm run vercel-build",
+  "installCommand": "npm ci --legacy-peer-deps",
   "outputDirectory": "unpackage/dist/build/h5"
 }
