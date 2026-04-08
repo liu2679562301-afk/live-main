@@ -319,26 +319,37 @@ class ApiService {
     
     const requestData = {
       leftVotes: leftVotes,
-      rightVotes: rightVotes,
-      streamId: streamId
+      rightVotes: rightVotes
     };
-    
-    // 可选：如果存在userId，则添加
+
+    // 如果找到用户ID，添加到请求中
     if (userId) {
       requestData.userId = String(userId);
     }
+
+    // 🔧 streamId 是必需的，必须添加到请求中
+    // 注意：如果 streamId 为空，上面的验证应该已经抛出错误
+    requestData.streamId = streamId;
 
     console.log('📤 投票请求数据 (服务器格式):', JSON.stringify(requestData, null, 2));
     console.log('📤 原始参数:', { side, votes: voteCount });
 
     try {
-      // 🔧 后端API期望直接格式（Java后端 VoteRequest 对象）
-      console.log('📤 最终发送的请求体:', JSON.stringify(requestData, null, 2));
+      // 🔧 后端API期望数据包装在 request 字段中
+      // 根据错误信息 "body -> request: Field required"，后端明确需要 request 字段
+    const requestBody = {
+      request: {
+        ...requestData,
+        stream_id: requestData.streamId || streamId
+      }
+    };
+      
+      console.log('📤 最终发送的请求体:', JSON.stringify(requestBody, null, 2));
       
       const response = await this.request({
         url: '/api/v1/user-vote',
         method: 'POST',
-        data: requestData
+        data: requestBody
       });
       try {
         const totals = await this.getVote(streamId);
@@ -892,6 +903,70 @@ class ApiService {
   }
 
   /**
+   * 获取录播列表
+   * @returns {Promise<Array>} 录播列表
+   */
+  async getRecordingsList() {
+    const response = await this.request({ url: '/api/recordings', method: 'GET' });
+    // 处理多种可能的响应格式
+    // 格式1: {success: true, data: [...]}
+    if (response && response.success && Array.isArray(response.data)) {
+      return response.data;
+    }
+    // 格式2: {code: 0, data: [...]}
+    if (response && response.code === 0 && Array.isArray(response.data)) {
+      return response.data;
+    }
+    // 格式3: 直接返回数组
+    if (Array.isArray(response)) {
+      return response;
+    }
+    // 格式4: {data: [...]}
+    if (response && Array.isArray(response.data)) {
+      return response.data;
+    }
+    console.warn('⚠️ 无法解析录播列表响应格式:', response);
+    return [];
+  }
+
+  /**
+   * 获取单个录播详情
+   * @param {string} recordingId - 录播ID
+   * @returns {Promise<Object>} 录播详情
+   */
+  async getRecording(recordingId) {
+    const response = await this.request({ url: `/api/recordings/${recordingId}`, method: 'GET' });
+    // 处理响应格式
+    if (response && response.success && response.data) {
+      return response.data;
+    }
+    if (response && response.code === 0 && response.data) {
+      return response.data;
+    }
+    return response;
+  }
+
+  /**
+   * 获取录播播放URL
+   * @param {string} recordingId - 录播ID
+   * @returns {Promise<string>} 播放URL
+   */
+  async getRecordingPlayUrl(recordingId) {
+    const response = await this.request({ url: `/api/recordings/${recordingId}/play`, method: 'GET' });
+    // 处理响应格式
+    if (response && response.success && response.data) {
+      return response.data;
+    }
+    if (response && response.code === 0 && response.data) {
+      return response.data;
+    }
+    if (typeof response === 'string') {
+      return response;
+    }
+    return '';
+  }
+
+  /**
    * 获取指定直播流的投票统计
    * @param {string} streamId - 直播流ID（可选）
    * @returns {Promise<Object>} 投票统计数据
@@ -908,7 +983,7 @@ class ApiService {
   }
 
   /**
-   * 获取 WebSocket URL（原生WebSocket协议）
+   * 获取 WebSocket URL
    * @returns {string} WebSocket连接地址
    */
   getWebSocketUrl() {
@@ -917,19 +992,6 @@ class ApiService {
     const wsHost = baseUrl.replace(/^https?:\/\//, '');
     // WebSocket 路径是 /ws（不是 /api/v1/ws）
     return `${wsProtocol}://${wsHost}/ws`;
-  }
-
-  /**
-   * 获取 STOMP over SockJS URL（HTTP协议，SockJS需要）
-   * @returns {string} SockJS连接地址
-   */
-  getSockJsUrl() {
-    const baseUrl = this.baseURL || API_BASE_URL || 'http://192.168.31.249:8081';
-    // SockJS需要HTTP/HTTPS协议，而不是ws/wss
-    const sockJsHost = baseUrl.replace(/^https?:\/\//, '');
-    const sockJsProtocol = baseUrl.startsWith('https') ? 'https' : 'http';
-    // SockJS端点路径是 /ws
-    return `${sockJsProtocol}://${sockJsHost}/ws`;
   }
 
   /**
@@ -1106,372 +1168,6 @@ class ApiService {
     // 其他格式，尝试直接返回（可能是HTTP-FLV等）
     console.log('⚠️ 未知格式的流地址，直接返回:', streamUrl);
     return streamUrl;
-  }
-
-  // ==================== 录播管理接口 ====================
-
-  /**
-   * 获取所有录播列表
-   * @returns {Promise<Array>} 录播列表
-   */
-  async getRecordings() {
-    const response = await this.request({ url: '/api/recordings', method: 'GET' });
-    // 处理多种可能的响应格式
-    // 格式1: { success: true, data: [...] }
-    if (response && response.success && response.data) {
-      return response.data;
-    }
-    // 格式2: { code: 0, data: [...] } （后端实际返回格式）
-    if (response && response.code === 0 && response.data) {
-      return response.data;
-    }
-    // 直接返回数组
-    if (Array.isArray(response)) {
-      return response;
-    }
-    // 格式：{recordings: [...]}
-    if (response && Array.isArray(response.recordings)) {
-      return response.recordings;
-    }
-    console.warn('⚠️ 无法解析录播列表响应格式:', response);
-    return [];
-  }
-
-  /**
-   * 获取单个录播的播放URL（预签名URL）
-   * 增强错误处理：添加超时、详细错误提示和重试机制
-   * @param {string} recordingId - 录播ID
-   * @returns {Promise<string>} 预签名播放URL
-   */
-  async getRecordingPlayUrl(recordingId) {
-    if (!recordingId) {
-      throw new Error('录播ID不能为空');
-    }
-    
-    console.log(`🔍 [getRecordingPlayUrl] 请求录播放URL: /api/recordings/${recordingId}/play`);
-    console.log(`📡 [getRecordingPlayUrl] 使用服务器地址: ${this.baseURL}`);
-    console.log(`⏱️ [getRecordingPlayUrl] 设置超时: ${this.timeout}ms`);
-    
-    const startTime = Date.now();
-    
-    try {
-      // 使用更短的超时时间（5秒），因为预签名URL生成应该很快
-      const response = await this.request({ 
-        url: `/api/recordings/${recordingId}/play`, 
-        method: 'GET',
-        timeout: Math.min(this.timeout, 5000) // 最大5秒超时
-      });
-      
-      const elapsedTime = Date.now() - startTime;
-      console.log(`📥 [getRecordingPlayUrl] 请求完成，耗时: ${elapsedTime}ms`);
-      console.log('📥 [getRecordingPlayUrl] 原始响应:', response);
-      
-      // 处理响应格式
-      // 格式0: 直接返回URL字符串
-      if (typeof response === 'string' && response.startsWith('http')) {
-        console.log('✅ [getRecordingPlayUrl] 格式0: 直接返回URL字符串');
-        console.log(`✅ [getRecordingPlayUrl] 成功获取播放URL，长度: ${response.length} 字符`);
-        return response;
-      }
-      // 格式1: { success: true, data: { playUrl: ... } }
-      if (response && response.success && response.data && response.data.playUrl) {
-        console.log('✅ [getRecordingPlayUrl] 格式1: { success: true, data: { playUrl: ... } }');
-        console.log(`✅ [getRecordingPlayUrl] 成功获取播放URL，长度: ${response.data.playUrl.length} 字符`);
-        return response.data.playUrl;
-      }
-      // 格式2: { code: 0, data: { playUrl: ... } } （后端实际返回格式）
-      if (response && response.code === 0 && response.data && response.data.playUrl) {
-        console.log('✅ [getRecordingPlayUrl] 格式2: { code: 0, data: { playUrl: ... } }');
-        console.log(`✅ [getRecordingPlayUrl] 成功获取播放URL，长度: ${response.data.playUrl.length} 字符`);
-        return response.data.playUrl;
-      }
-      // 格式3: { code: 0, playUrl: ... }
-      if (response && response.code === 0 && response.playUrl) {
-        console.log('✅ [getRecordingPlayUrl] 格式3: { code: 0, playUrl: ... }');
-        console.log(`✅ [getRecordingPlayUrl] 成功获取播放URL，长度: ${response.playUrl.length} 字符`);
-        return response.playUrl;
-      }
-      // 格式4: 直接返回 playUrl 字段
-      if (response && response.playUrl) {
-        console.log('✅ [getRecordingPlayUrl] 格式4: 直接返回 playUrl 字段');
-        console.log(`✅ [getRecordingPlayUrl] 成功获取播放URL，长度: ${response.playUrl.length} 字符`);
-        return response.playUrl;
-      }
-      // 格式5: 嵌套在 data 字段中
-      if (response && response.data && response.data.playUrl) {
-        console.log('✅ [getRecordingPlayUrl] 格式5: 嵌套在 data 字段中');
-        console.log(`✅ [getRecordingPlayUrl] 成功获取播放URL，长度: ${response.data.playUrl.length} 字符`);
-        return response.data.playUrl;
-      }
-      // 格式6: 直接返回 data 为字符串URL
-      if (response && response.data && typeof response.data === 'string' && response.data.startsWith('http')) {
-        console.log('✅ [getRecordingPlayUrl] 格式6: 直接返回 data 为字符串URL');
-        console.log(`✅ [getRecordingPlayUrl] 成功获取播放URL，长度: ${response.data.length} 字符`);
-        return response.data;
-      }
-      
-      // 响应成功但格式无法识别
-      console.warn('⚠️ [getRecordingPlayUrl] 无法解析录播放URL响应格式:', {
-        response,
-        responseType: typeof response,
-        hasSuccess: response && response.success,
-        hasCode: response && response.code,
-        hasData: response && response.data,
-        hasPlayUrl: response && response.playUrl,
-        dataType: response && response.data && typeof response.data
-      });
-      
-      // 尝试从响应中提取可能的URL
-      const possibleUrl = this.extractPossibleUrl(response);
-      if (possibleUrl) {
-        console.warn('⚠️ [getRecordingPlayUrl] 从响应中提取到可能的URL:', possibleUrl);
-        return possibleUrl;
-      }
-      
-      throw new Error(`无法解析录播放URL响应格式: ${JSON.stringify(response, null, 2)}`);
-    } catch (error) {
-      const elapsedTime = Date.now() - startTime;
-      console.error(`❌ [getRecordingPlayUrl] 获取录播放URL失败，耗时: ${elapsedTime}ms`, {
-        recordingId,
-        errorMessage: error.message,
-        errorStatus: error.statusCode,
-        errorResponse: error.response,
-        baseURL: this.baseURL,
-        stack: error.stack
-      });
-      
-      // 提供更友好的错误提示
-      let userMessage = '获取录播放URL失败';
-      if (error.statusCode === 404) {
-        userMessage = `录播不存在或已被删除 (ID: ${recordingId})`;
-      } else if (error.statusCode === 403) {
-        userMessage = '权限不足，无法访问该录播';
-      } else if (error.statusCode === 500) {
-        userMessage = '服务器内部错误，请稍后重试';
-      } else if (error.message.includes('timeout')) {
-        userMessage = `请求超时 (${elapsedTime}ms)，请检查网络连接`;
-      } else if (error.message.includes('network')) {
-        userMessage = '网络连接失败，请检查网络设置';
-      } else if (error.message) {
-        userMessage = `获取失败: ${error.message}`;
-      }
-      
-      // 创建增强的错误对象
-      const enhancedError = new Error(userMessage);
-      enhancedError.originalError = error;
-      enhancedError.recordingId = recordingId;
-      enhancedError.elapsedTime = elapsedTime;
-      enhancedError.statusCode = error.statusCode;
-      throw enhancedError;
-    }
-  }
-
-  /**
-   * 从响应对象中提取可能的URL
-   * @param {any} response - 响应对象
-   * @returns {string|null} 可能的URL
-   */
-  extractPossibleUrl(response) {
-    if (!response || typeof response !== 'object') {
-      return null;
-    }
-    
-    // 深度优先搜索字符串类型的URL
-    const searchForUrl = (obj, depth = 0) => {
-      if (depth > 3) return null; // 防止无限递归
-      
-      if (typeof obj === 'string' && obj.startsWith('http')) {
-        return obj;
-      }
-      
-      if (Array.isArray(obj)) {
-        for (const item of obj) {
-          const result = searchForUrl(item, depth + 1);
-          if (result) return result;
-        }
-      } else if (obj && typeof obj === 'object') {
-        for (const key in obj) {
-          if (key.toLowerCase().includes('url') && typeof obj[key] === 'string' && obj[key].startsWith('http')) {
-            return obj[key];
-          }
-          const result = searchForUrl(obj[key], depth + 1);
-          if (result) return result;
-        }
-      }
-      
-      return null;
-    };
-    
-    return searchForUrl(response);
-  }
-
-  /**
-   * 获取单个录播详情
-   * @param {string} recordingId - 录播ID
-   * @returns {Promise<Object>} 录播详情
-   */
-  async getRecordingById(recordingId) {
-    if (!recordingId) {
-      throw new Error('录播ID不能为空');
-    }
-    const response = await this.request({ 
-      url: `/api/recordings/${recordingId}`, 
-      method: 'GET' 
-    });
-    // 处理响应格式
-    if (response && response.success && response.data) {
-      return response.data;
-    }
-    if (response && response.data) {
-      return response.data;
-    }
-    return response;
-  }
-
-  /**
-   * 原子化上传录播文件
-   * 将文件上传和元数据创建合并为一个原子操作
-   * @param {Object} uploadData - 上传数据
-   * @param {string} uploadData.filename - 文件名
-   * @param {string} uploadData.title - 录播标题
-   * @param {string} [uploadData.description] - 描述（可选）
-   * @param {number} [uploadData.duration] - 时长（秒，可选）
-   * @param {number} [uploadData.width] - 视频宽度（可选）
-   * @param {number} [uploadData.height] - 视频高度（可选）
-   * @param {string} [uploadData.streamId] - 直播流ID（可选）
-   * @param {File|ArrayBuffer|string} uploadData.fileData - 文件数据
-   * @returns {Promise<Object>} 上传结果
-   */
-  async uploadRecording(uploadData) {
-    try {
-      console.log('📤 [uploadRecording] 开始原子化上传录播文件');
-      console.log('📊 [uploadRecording] 上传数据:', {
-        filename: uploadData.filename,
-        title: uploadData.title,
-        description: uploadData.description,
-        duration: uploadData.duration,
-        fileSize: uploadData.fileData ? 
-          (typeof uploadData.fileData === 'string' ? uploadData.fileData.length : 
-           uploadData.fileData.byteLength || uploadData.fileData.size) : 'N/A'
-      });
-
-      // 准备请求数据
-      let fileData;
-      if (uploadData.fileData instanceof File) {
-        // 如果是File对象，读取为ArrayBuffer
-        const arrayBuffer = await new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(reader.result);
-          reader.onerror = reject;
-          reader.readAsArrayBuffer(uploadData.fileData);
-        });
-        fileData = Array.from(new Uint8Array(arrayBuffer));
-      } else if (uploadData.fileData instanceof ArrayBuffer) {
-        fileData = Array.from(new Uint8Array(uploadData.fileData));
-      } else if (typeof uploadData.fileData === 'string') {
-        // 如果是Base64字符串，解码
-        const binaryString = atob(uploadData.fileData);
-        const bytes = new Uint8Array(binaryString.length);
-        for (let i = 0; i < binaryString.length; i++) {
-          bytes[i] = binaryString.charCodeAt(i);
-        }
-        fileData = Array.from(bytes);
-      } else {
-        throw new Error('不支持的文件数据类型');
-      }
-
-      const requestBody = {
-        filename: uploadData.filename,
-        title: uploadData.title,
-        description: uploadData.description || '用户上传的录播文件',
-        duration: uploadData.duration || 3600,
-        width: uploadData.width || 1920,
-        height: uploadData.height || 1080,
-        streamId: uploadData.streamId || 'stream-001',
-        fileData: fileData
-      };
-
-      console.log('📤 [uploadRecording] 发送请求到 /api/recordings/upload');
-      const response = await this.request({
-        url: '/api/recordings/upload',
-        method: 'POST',
-        data: requestBody,
-        timeout: 30000 // 30秒超时，文件上传可能较慢
-      });
-
-      console.log('✅ [uploadRecording] 原子化上传成功:', {
-        recordingId: response.data?.id || response.id,
-        playUrlLength: response.data?.playUrl?.length || response.playUrl?.length || 0
-      });
-
-      return response;
-    } catch (error) {
-      console.error('❌ [uploadRecording] 原子化上传失败:', {
-        errorMessage: error.message,
-        errorStatus: error.statusCode,
-        errorResponse: error.response,
-        filename: uploadData?.filename
-      });
-
-      // 提供详细的错误提示
-      let userMessage = '录播文件上传失败';
-      if (error.statusCode === 413) {
-        userMessage = '文件太大，超过服务器限制';
-      } else if (error.statusCode === 415) {
-        userMessage = '不支持的文件格式';
-      } else if (error.statusCode === 400) {
-        userMessage = '上传参数错误，请检查文件格式和大小';
-      } else if (error.statusCode === 500) {
-        userMessage = '服务器内部错误，请稍后重试';
-      } else if (error.message.includes('timeout')) {
-        userMessage = '上传超时，请检查网络连接或尝试较小文件';
-      } else if (error.message.includes('network')) {
-        userMessage = '网络连接失败，请检查网络设置';
-      } else if (error.response?.message) {
-        userMessage = `上传失败: ${error.response.message}`;
-      }
-
-      const enhancedError = new Error(userMessage);
-      enhancedError.originalError = error;
-      enhancedError.filename = uploadData?.filename;
-      enhancedError.statusCode = error.statusCode;
-      throw enhancedError;
-    }
-  }
-
-  /**
-   * 检查录播数据一致性
-   * 验证数据库记录与Minio存储之间的一致性
-   * @returns {Promise<Object>} 一致性检查结果
-   */
-  async checkRecordingConsistency() {
-    try {
-      console.log('🔍 [checkRecordingConsistency] 开始一致性检查');
-      const response = await this.request({
-        url: '/api/recordings/consistency-check',
-        method: 'GET',
-        timeout: 10000 // 10秒超时
-      });
-
-      console.log('✅ [checkRecordingConsistency] 一致性检查完成:', {
-        totalDatabaseRecords: response.data?.totalDatabaseRecords,
-        totalMinioObjects: response.data?.totalMinioObjects,
-        consistent: response.data?.consistent,
-        inconsistencies: (response.data?.inDbNotInMinio?.length || 0) + 
-                         (response.data?.inMinioNotInDb?.length || 0)
-      });
-
-      return response;
-    } catch (error) {
-      console.error('❌ [checkRecordingConsistency] 一致性检查失败:', {
-        errorMessage: error.message,
-        errorStatus: error.statusCode
-      });
-
-      const enhancedError = new Error(`一致性检查失败: ${error.message}`);
-      enhancedError.originalError = error;
-      throw enhancedError;
-    }
   }
 }
 

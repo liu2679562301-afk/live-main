@@ -1,0 +1,89 @@
+name: Deploy to Railway
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  deploy-backend:
+    name: Deploy Backend
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Cache Maven dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      - name: Build backend
+        working-directory: ./backend/live-debate-fullstack/backend
+        run: mvn clean package -DskipTests
+
+      - name: Install Railway CLI
+        run: npm i -g @railway/cli
+
+      - name: Deploy backend to Railway
+        working-directory: ./backend/live-debate-fullstack/backend
+        run: railway up --service live-debate-backend
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+
+  deploy-gateway:
+    name: Deploy Gateway
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: ./gateway/live-gateway-main/package.json
+
+      - name: Install dependencies
+        working-directory: ./gateway/live-gateway-main
+        run: npm install
+
+      - name: Install Railway CLI
+        run: npm i -g @railway/cli
+
+      - name: Deploy gateway to Railway
+        working-directory: ./gateway/live-gateway-main
+        run: railway up --service live-debate-gateway
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+
+  notify:
+    name: Notify Deployment
+    needs: [deploy-backend, deploy-gateway]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Notify success
+        if: needs.deploy-backend.result == 'success' && needs.deploy-gateway.result == 'success'
+        run: |
+          echo "✅ 部署成功！"
+          echo "后端和网关已成功部署到 Railway"
+
+      - name: Notify failure
+        if: needs.deploy-backend.result == 'failure' || needs.deploy-gateway.result == 'failure'
+        run: |
+          echo "❌ 部署失败！"
+          echo "请检查 GitHub Actions 日志"

@@ -1,0 +1,10 @@
+[build]
+builder = "nixpacks"
+buildCommand = "mvn clean package -DskipTests"
+startCommand = "java -jar target/*.jar"
+
+[[services]]
+name = "backend"
+port = 3000
+healthcheckPath = "/health"
+healthcheckTimeout = 300

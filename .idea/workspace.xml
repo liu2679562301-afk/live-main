@@ -4,11 +4,154 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="066b2325-4a19-451f-853b-f93007dd2970" name="更改" comment="" />
+    <list default="true" id="066b2325-4a19-451f-853b-f93007dd2970" name="更改" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/Live-main/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/Live-main/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/.gitignore" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/App.vue" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/admin/admin-api.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/admin/admin-events.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/admin/admin.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/admin/assets/images/judges/osmanthus.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/admin/db.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/admin/index.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/admin/judges-management.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/admin/stream-management.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/admin/styles.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/admin/vote-display.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/admin/数据大屏接口文档.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/components/IconFont/IconFont.vue" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/components/LottieAnimation.vue" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/components/PopDecoration.vue" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/config/api-config.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/config/live-config.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/config/performance-config.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/config/server-mode.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/config/server-mode.node.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/data.backup.disabled/debate.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/data.backup.disabled/live-schedule.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/data.backup.disabled/statistics.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/data.backup.disabled/streams.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/data.backup.disabled/users.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/data/debate.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/data/live-schedule.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/data/statistics.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/data/streams.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/data/users.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/deploy-auto.sh" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/deploy.sh" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/ecosystem.config.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/index.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/main.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/manifest.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/pages.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/pages/home/home.vue" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/pages/index/index.vue" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/pages/live-select/live-select.vue" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/quick-update-admin.sh" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/server-setup.sh" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/server.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/static/animations/Circle Shape Morphing animation.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/static/animations/Hearts feedback.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/static/animations/Sword Battle.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/static/animations/button YES.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/static/animations/fire.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/static/animations/lcBg-01.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/static/animations/loading.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/static/home/guangbo-bangong.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/static/home/kidaha-.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/static/home/quweichahuaqueshengye.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/static/iconfont/baogaozongjie.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/static/iconfont/blue-user.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/static/iconfont/bofang.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/static/iconfont/dianzan.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/static/iconfont/dibu_zhuye_weixuanzhongzhuangtai.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/static/iconfont/dibu_zhuye_yixuanzhongzhuangtai.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/static/iconfont/fangyudunpai-.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/static/iconfont/gongjigongju.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/static/iconfont/guankanrenshu.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/static/iconfont/iconfont.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/static/iconfont/live.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/static/iconfont/pinglun.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/static/iconfont/shanchu.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/static/iconfont/shouqi.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/static/iconfont/shuaxin.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/static/iconfont/shuju.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/static/iconfont/suo.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/static/iconfont/toupiao.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/static/iconfont/tuichudenglu.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/static/iconfont/wode.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/static/iconfont/wodexuanzhong.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/static/iconfont/zhankai.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/static/iconfont/zhibo.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/static/iconfont/zhibo1.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/static/iconfont/zhibo_1.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/static/xiangsu/huwenmao.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/static/xiangsu/xiangsu-denglong.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/static/xiangsu/xiangsu-hanbao.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/static/xiangsu/xiangsu-hongyingwu.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/static/xiangsu/xiangsu-huangsehua.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/static/xiangsu/xiangsu-huomiao.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/static/xiangsu/xiangsu-huoyan.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/static/xiangsu/xiangsu-kouzhao.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/static/xiangsu/xiangsu-lvsehudie.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/static/xiangsu/xiangsu-maliao.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/static/xiangsu/xiangsu-mifeng-01.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/static/xiangsu/xiangsu-pisa.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/static/xiangsu/xiangsu-xingqiu.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/static/xiangsu/xiangsu-xuehua.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/static/xiangsu/xiangsu-zhadan.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/static/xiangsu/xiangsu-zhaji.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/static/xiangsu/xiangsu-zhongguojie.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/static/xiangsu/xiangsu-zipitang-01.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/static/xiangsu/xiangsu-zisehua.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/static/xiangsu/xiangsu-zisehudie.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/static/xiangsu/xiangsu_aixin.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/static/xiangsu/xiangsu_biaoqing.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/static/xiangsu/xiangsu_caomei.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/static/xiangsu/xiangsu_fangzi.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/static/xiangsu/xiangsu_jiangbei.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/static/xiangsu/xiangsu_jinbi.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/static/xiangsu/xiangsu_mao.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/static/xiangsu/xiangsu_pijiu.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/static/xiangsu/xiangsu_tuzi.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/static/xiangsu/xiangsu_wuqi.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/static/xiangsu/xiangsu_xiaoya.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/static/xiangsu/xiangsu_youxiji.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/static/xiangsu/xiangsu_zuanshi.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/static/xiangsu/xiangsufeng_dangao.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/static/xiangsu/xiangsufeng_dianshiji.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/static/xiangsu/xiangsufeng_fangzi.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/static/xiangsu/xiangsufeng_feidie.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/static/xiangsu/xiangsufeng_huapen.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/static/xiangsu/xiangsufeng_shouyinji.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/static/xiangsu/xiangsufeng_xianhua.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/static/xiangsu/xiangsufeng_xiaoxi.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/static/xiangsu/xiangsufeng_xinfeng.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/static/xiangsu/xiangsufeng_xunzhang.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/static/xiangsu/yumi-daipi.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/test-vote-api.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/uni.promisify.adaptor.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/uni.scss" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/update-admin.sh" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/upload-server.sh" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/upload-utils.sh" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/utils/api-interceptor.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/utils/api-service.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/utils/performance-monitor.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/utils/stomp-client.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/utils/uni-stomp-client.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Live-main/src/vercel.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/live-debate-fullstack/backend/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst" beforeDir="false" afterPath="$PROJECT_DIR$/backend/live-debate-fullstack/backend/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="ProjectColorInfo">{
   &quot;customColor&quot;: &quot;&quot;,
@@ -19,25 +162,56 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "npm.build:h5.executor": "Run",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_interpreter_path&quot;: &quot;C:/soft/nvm/v18.20.0/node&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;npm.build:h5.executor&quot;: &quot;Run&quot;,
+    &quot;npm.dev:h5.executor&quot;: &quot;Run&quot;,
+    &quot;npm.dev:h5:serve.executor&quot;: &quot;Run&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;settings.nodejs&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
-  <component name="RunManager">
+}</component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Study\Web_FrontEnd\WX\Live-main\Live-main" />
+    </key>
+  </component>
+  <component name="RunManager" selected="npm.dev:h5">
     <configuration name="build:h5" type="js.build_tools.npm" temporary="true" nameIsGenerated="true">
       <package-json value="$PROJECT_DIR$/Live-main/package.json" />
       <command value="run" />
       <scripts>
         <script value="build:h5" />
+      </scripts>
+      <node-interpreter value="$PROJECT_DIR$/../../../../soft/nvm/v18.20.0/node" />
+      <envs />
+      <method v="2" />
+    </configuration>
+    <configuration name="dev:h5" type="js.build_tools.npm" temporary="true" nameIsGenerated="true">
+      <package-json value="$PROJECT_DIR$/Live-main/package.json" />
+      <command value="run" />
+      <scripts>
+        <script value="dev:h5" />
+      </scripts>
+      <node-interpreter value="project" />
+      <envs />
+      <method v="2" />
+    </configuration>
+    <configuration name="dev:h5:serve" type="js.build_tools.npm" temporary="true" nameIsGenerated="true">
+      <package-json value="$PROJECT_DIR$/Live-main/package.json" />
+      <command value="run" />
+      <scripts>
+        <script value="dev:h5:serve" />
       </scripts>
       <node-interpreter value="project" />
       <envs />
@@ -45,6 +219,8 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="npm.dev:h5" />
+        <item itemvalue="npm.dev:h5:serve" />
         <item itemvalue="npm.build:h5" />
       </list>
     </recent_temporary>
@@ -65,6 +241,8 @@
       <updated>1775296607421</updated>
       <workItem from="1775296610022" duration="84000" />
       <workItem from="1775459810569" duration="592000" />
+      <workItem from="1775466796543" duration="5007000" />
+      <workItem from="1775488287654" duration="35000" />
     </task>
     <servers />
   </component>

@@ -1,18 +1,4 @@
-// Polyfill for global object (required by sockjs-client and @stomp/stompjs)
-if (typeof global === 'undefined') {
-  if (typeof globalThis !== 'undefined') {
-    globalThis.global = globalThis;
-  } else if (typeof window !== 'undefined') {
-    window.global = window;
-  } else if (typeof self !== 'undefined') {
-    self.global = self;
-  } else {
-    // Fallback for other environments
-    global = {};
-  }
-}
-
-import App from './App.vue'
+import App from './App'
 import IconFont from './components/IconFont/IconFont.vue'
 
 // #ifndef VUE3

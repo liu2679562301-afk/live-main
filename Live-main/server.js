@@ -6,7 +6,7 @@ const http = require('http');
 const { v4: uuidv4 } = require('uuid');
 const { createProxyMiddleware } = require('http-proxy-middleware');
 const serverCfg = require('./config/server-mode.node.js');
-const { getCurrentServerConfig, printConfig, BACKEND_SERVER_URL, PRIORITIZE_BACKEND_SERVER, SRS_SERVER_URL } = serverCfg;
+const { getCurrentServerConfig, printConfig, BACKEND_SERVER_URL, PRIORITIZE_BACKEND_SERVER } = serverCfg;
 
 const currentConfig = getCurrentServerConfig();
 const port = currentConfig.port; // 直接使用配置中的端口（mock和非mock模式都已配置为8080）
@@ -181,7 +181,7 @@ app.options('*', (req, res) => {
     res.sendStatus(204);
 });
 
-app.use(express.json({ limit: '10mb', strict: false }));
+app.use(express.json());
 
 // ==================== 后台管理路由（必须在代理之前） ====================
 const path = require('path');
@@ -197,8 +197,6 @@ app.use('/admin', express.static(path.join(__dirname, 'admin')));
 // 提供静态资源（图标、动画等）
 app.use('/static', express.static(path.join(__dirname, 'static')));
 // ==================== 后台管理路由结束 ====================
-
-
 
 // ==================== 优先代理到后端服务器（如果启用） ====================
 // 如果 PRIORITIZE_BACKEND_SERVER 为 true，所有 API 请求优先代理到后端服务器
@@ -243,53 +241,50 @@ if (PRIORITIZE_BACKEND_SERVER && BACKEND_SERVER_URL) {
 
 // ==================== 直播流代理（SRS 服务器） ====================
 // 将直播流请求代理到 SRS 服务器，让小程序通过中间层访问
-// Railway部署：如果未配置SRS服务器，则禁用直播流代理
-if (SRS_SERVER_URL) {
-	const srsProxy = createProxyMiddleware({
-		target: SRS_SERVER_URL,
-		changeOrigin: true,
-		logger: console,
-		// 路径重写：保留 /live 前缀
-		// 请求: /live/test.m3u8 -> 转发到: http://192.168.31.189:8086/live/test.m3u8
-		// 注意：app.use('/live', proxy) 会自动移除 /live 前缀，所以需要手动加回来
-		pathRewrite: (path, req) => {
-			// 如果路径不包含 /live，添加 /live 前缀
-			if (!path.startsWith('/live')) {
-				return '/live' + path;
-			}
-			return path;
-		},
-		onProxyReq: (proxyReq, req, res) => {
-			console.log(`📺 [直播流代理] ${req.method} ${req.path} -> ${SRS_SERVER_URL}${proxyReq.path}`);
-		},
-		onProxyRes: (proxyRes, req, res) => {
-			// 设置 CORS 头，允许小程序访问
-			proxyRes.headers['Access-Control-Allow-Origin'] = '*';
-			proxyRes.headers['Access-Control-Allow-Methods'] = 'GET, HEAD, OPTIONS';
-			proxyRes.headers['Access-Control-Allow-Headers'] = 'Content-Type, Range';
-			proxyRes.headers['Access-Control-Expose-Headers'] = 'Content-Length, Content-Range';
-			console.log(`✅ [直播流代理] ${req.path} <- ${proxyRes.statusCode} ${SRS_SERVER_URL}`);
-		},
-		onError: (err, req, res) => {
-			console.error(`❌ [直播流代理错误] ${req.path}:`, err.message);
-			if (!res.headersSent) {
-				res.status(502).json({
-					success: false,
-					error: 'Bad Gateway',
-					message: `无法连接到 SRS 服务器 ${SRS_SERVER_URL}`,
-					path: req.path,
-					details: err.message
-				});
-			}
-		}
-	});
+const SRS_SERVER_URL = 'http://192.168.31.189:8086';
 
-	// 在所有路由之前添加直播流代理（在 API 代理之后，但在其他路由之前）
-	app.use('/live', srsProxy);
-	console.log('✅ 直播流代理已配置: /live/* -> ' + SRS_SERVER_URL);
-} else {
-	console.log('⚠️  直播流代理已禁用 (SRS_SERVER_URL 未配置)');
-}
+const srsProxy = createProxyMiddleware({
+	target: SRS_SERVER_URL,
+	changeOrigin: true,
+	logger: console,
+	// 路径重写：保留 /live 前缀
+	// 请求: /live/test.m3u8 -> 转发到: http://192.168.31.189:8086/live/test.m3u8
+	// 注意：app.use('/live', proxy) 会自动移除 /live 前缀，所以需要手动加回来
+	pathRewrite: (path, req) => {
+		// 如果路径不包含 /live，添加 /live 前缀
+		if (!path.startsWith('/live')) {
+			return '/live' + path;
+		}
+		return path;
+	},
+	onProxyReq: (proxyReq, req, res) => {
+		console.log(`📺 [直播流代理] ${req.method} ${req.path} -> ${SRS_SERVER_URL}${proxyReq.path}`);
+	},
+	onProxyRes: (proxyRes, req, res) => {
+		// 设置 CORS 头，允许小程序访问
+		proxyRes.headers['Access-Control-Allow-Origin'] = '*';
+		proxyRes.headers['Access-Control-Allow-Methods'] = 'GET, HEAD, OPTIONS';
+		proxyRes.headers['Access-Control-Allow-Headers'] = 'Content-Type, Range';
+		proxyRes.headers['Access-Control-Expose-Headers'] = 'Content-Length, Content-Range';
+		console.log(`✅ [直播流代理] ${req.path} <- ${proxyRes.statusCode} ${SRS_SERVER_URL}`);
+	},
+	onError: (err, req, res) => {
+		console.error(`❌ [直播流代理错误] ${req.path}:`, err.message);
+		if (!res.headersSent) {
+			res.status(502).json({
+				success: false,
+				error: 'Bad Gateway',
+				message: `无法连接到 SRS 服务器 ${SRS_SERVER_URL}`,
+				path: req.path,
+				details: err.message
+			});
+		}
+	}
+});
+
+// 在所有路由之前添加直播流代理（在 API 代理之后，但在其他路由之前）
+app.use('/live', srsProxy);
+console.log('✅ 直播流代理已配置: /live/* -> ' + SRS_SERVER_URL);
 
 // ==================== 后台管理 API（仅在非优先后端模式时使用） ====================
 const db = require('./admin/db.js');
@@ -3623,23 +3618,6 @@ if (BACKEND_SERVER_URL && !PRIORITIZE_BACKEND_SERVER) {
 	console.log('✅ 后端代理中间件已添加到路由栈');
 } else {
 	console.log('⚠️  后端代理未配置（BACKEND_SERVER_URL 或 PRIORITIZE_BACKEND_SERVER 不满足条件）');
-}
-
-// ==================== 前端H5静态文件服务（在所有API路由之后） ====================
-// 提供构建后的H5前端静态文件
-const h5StaticPath = path.join(__dirname, 'dist', 'build', 'h5');
-if (require('fs').existsSync(h5StaticPath)) {
-	app.use(express.static(h5StaticPath));
-	// SPA路由回退到index.html（排除API、WebSocket、直播流、后台管理等路径）
-	app.get('*', (req, res, next) => {
-		if (req.path.startsWith('/api') || req.path.startsWith('/ws') || req.path.startsWith('/live') || req.path.startsWith('/admin') || req.path.startsWith('/static')) {
-			return next();
-		}
-		res.sendFile(path.join(h5StaticPath, 'index.html'));
-	});
-	console.log('✅ 前端H5静态文件服务已启用:', h5StaticPath);
-} else {
-	console.log('⚠️  前端H5静态文件未找到，跳过静态文件服务:', h5StaticPath);
 }
 
 // ==================== 404处理器（必须在所有路由之后） ====================

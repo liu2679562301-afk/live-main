@@ -80,17 +80,14 @@
 
 <script>
 import apiService from '@/utils/api-service.js';
-import { createStompClient } from '@/utils/uni-stomp-client.js';
 
 export default {
 	data() {
 		return {
 			loading: true,
 			liveStreams: [],
-			stompClient: null, // STOMP客户端实例
-			reconnectTimer: null,
-			subscriptions: [], // 订阅列表
-			wsReconnectAttempts: 0 // WebSocket重连次数
+			wsConnection: null,
+			reconnectTimer: null
 		};
 	},
 	
@@ -147,21 +144,7 @@ export default {
 		async fetchStreamDetails(stream) {
 			try {
 				const dashboard = await apiService.getDashboard(stream.id);
-				let isCurrentlyLive = dashboard?.isLive === true;
-				
-				// 如果 dashboard 中没有 isLive 字段，尝试从直播状态接口获取
-				if (dashboard?.isLive === undefined) {
-					try {
-						const liveStatus = await apiService.getLiveStatus();
-						if (liveStatus && liveStatus.data && liveStatus.data.streams) {
-							// streams 对象格式: {"stream-001": true, "stream-002": true}
-							isCurrentlyLive = liveStatus.data.streams[stream.id] === true;
-						}
-					} catch (liveStatusError) {
-						console.warn('无法获取直播状态:', liveStatusError);
-						// 保持默认值 false
-					}
-				}
+				const isCurrentlyLive = dashboard?.isLive === true;
 				
 				// 从 dashboard 获取辩题信息（包含 leftSide 和 rightSide）
 				let debateTopic = null;
@@ -223,76 +206,43 @@ export default {
 			});
 		},
 		
-		// STOMP over SockJS WebSocket 连接
+		// WebSocket methods kept minimal for brevity but fully functional
 		connectWebSocket() {
 			try {
-				// 断开现有连接
-				this.disconnectWebSocket();
-				
-				// 创建STOMP客户端
-				this.stompClient = createStompClient({
-					endpoint: '/ws',
-					baseUrl: apiService.baseURL,
-					reconnectDelay: 5000,
-					debug: process.env.NODE_ENV === 'development',
-					onConnect: (frame) => {
-						console.log('✅ STOMP WebSocket 已连接', frame);
-						this.wsReconnectAttempts = 0;
-						
-						// 订阅直播状态主题
-						this.liveSubscription = this.stompClient.subscribe('/topic/live-status', (message) => {
-							this.handleWebSocketMessage(message);
-						});
-						
-						this.subscriptions.push(this.liveSubscription);
-						console.log('📡 已订阅直播状态更新');
-					},
-					onError: (error) => {
-						console.error('❌ STOMP WebSocket 连接失败', error);
-						this.scheduleReconnect();
-					},
-					onDisconnect: () => {
-						console.log('🔌 STOMP WebSocket 已断开');
-						this.subscriptions = [];
-						this.scheduleReconnect();
+				const wsUrl = apiService.getWebSocketUrl();
+				this.wsConnection = uni.connectSocket({
+					url: wsUrl,
+					success: () => console.log('✅ WebSocket 连接请求已发送')
+				});
+				this.wsConnection.onMessage((event) => {
+					try {
+						const message = JSON.parse(event.data);
+						this.handleWebSocketMessage(message);
+					} catch (error) {
+						console.error('❌ 解析 WebSocket 消息失败:', error);
 					}
 				});
-				
-				// 开始连接
-				this.stompClient.connect();
+				this.wsConnection.onError(() => this.scheduleReconnect());
+				this.wsConnection.onClose(() => this.scheduleReconnect());
 			} catch (error) {
-				console.error('❌ 创建 STOMP WebSocket 连接失败:', error);
-				this.scheduleReconnect();
+				console.error('❌ 创建 WebSocket 连接失败:', error);
 			}
 		},
 		
 		disconnectWebSocket() {
-			// 清理重连定时器
 			if (this.reconnectTimer) {
 				clearTimeout(this.reconnectTimer);
 				this.reconnectTimer = null;
 			}
-			
-			// 取消所有订阅
-			this.subscriptions.forEach(sub => {
-				if (sub && sub.unsubscribe) {
-					sub.unsubscribe();
-				}
-			});
-			this.subscriptions = [];
-			
-			// 断开STOMP连接
-			if (this.stompClient && this.stompClient.disconnect) {
-				this.stompClient.disconnect();
-				this.stompClient = null;
+			if (this.wsConnection) {
+				this.wsConnection.close();
+				this.wsConnection = null;
 			}
 		},
 		
 		scheduleReconnect() {
 			if (this.reconnectTimer) return;
-			
 			this.reconnectTimer = setTimeout(() => {
-				console.log('🔄 尝试重新连接WebSocket...');
 				this.reconnectTimer = null;
 				this.connectWebSocket();
 			}, 5000);
@@ -302,7 +252,6 @@ export default {
 			const { type, streamId, liveId, data } = message;
 			const currentStreamId = streamId || liveId || data?.streamId || data?.liveId;
 			
-			// 处理直播状态更新消息
 			if (type === 'liveStatus' || type === 'live-status-changed') {
 				if (currentStreamId && data) this.updateLiveStatus(currentStreamId, data);
 			}

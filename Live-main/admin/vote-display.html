@@ -5,10 +5,6 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>票数统计大屏幕</title>
 	<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
-	<!-- STOMP over SockJS WebSocket 客户端 -->
-	<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
-	<script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@6/bundles/stomp.umd.min.js"></script>
-	<script src="../utils/stomp-client.js"></script>
 	<style>
 		@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap');
 
@@ -1425,89 +1421,49 @@
 			return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 		}
 
-		// 初始化WebSocket（用于实时更新）使用STOMP over SockJS
+		// 初始化WebSocket（用于实时更新）
 		function initWebSocket() {
 			try {
-				// 清理之前的连接（如果存在）
-				if (ws && ws.disconnect) {
-					ws.disconnect();
-					ws = null;
-				}
-				
-				// 使用STOMP客户端工厂创建连接
-				const stompOptions = {
-					endpoint: '/ws',
-					reconnectDelay: 5000,
-					heartbeatIncoming: 4000,
-					heartbeatOutgoing: 4000,
-					debug: false,
-					onConnect: function(frame) {
-						console.log('✅ STOMP WebSocket 已连接', frame);
-						// 订阅投票更新主题（主要关注投票变化）
-						if (ws && ws.subscribe) {
-							ws.voteSubscription = ws.subscribe('/topic/vote-updates', function(body, message) {
-								// body 已经是解析后的JSON对象
-								handleWebSocketMessage(body);
-							});
-							console.log('📡 已订阅投票更新主题');
-						}
-					},
-					onError: function(error) {
-						console.error('❌ STOMP WebSocket 连接失败', error);
-						// 连接失败，安排重连
-						setTimeout(() => {
-							if (currentStreamId) {
-								console.log('🔄 尝试重新连接...');
-								initWebSocket();
-							}
-						}, 5000);
-					},
-					onDisconnect: function() {
-						console.log('🔌 STOMP WebSocket 已断开');
-						// 断开连接后，安排重连
-						setTimeout(() => {
-							if (currentStreamId) {
-								console.log('🔄 尝试重新连接...');
-								initWebSocket();
-							}
-						}, 5000);
+				const wsBaseUrl = getAPIBase();
+				const baseUrl = new URL(wsBaseUrl);
+				const protocol = baseUrl.protocol === 'https:' ? 'wss:' : 'ws:';
+				const wsUrl = `${protocol}//${baseUrl.host}/ws`;
+
+				ws = new WebSocket(wsUrl);
+
+				ws.onopen = () => {
+					console.log('✅ WebSocket 已连接');
+				};
+
+				ws.onmessage = (event) => {
+					try {
+						const message = JSON.parse(event.data);
+						handleWebSocketMessage(message);
+					} catch (error) {
+						console.error('WebSocket 消息解析失败:', error);
 					}
 				};
 
-				// 创建STOMP客户端实例
-				ws = StompClientFactory.createStompClient(stompOptions);
-				ws.connect();
+				ws.onerror = (error) => {
+					console.error('WebSocket 错误:', error);
+				};
+
+				ws.onclose = () => {
+					console.log('WebSocket 已断开，5秒后重连...');
+					setTimeout(() => {
+						if (currentStreamId) {
+							initWebSocket();
+						}
+					}, 5000);
+				};
 			} catch (error) {
 				console.error('WebSocket 初始化失败:', error);
-				// 失败后尝试重连
-				setTimeout(() => {
-					if (currentStreamId) {
-						initWebSocket();
-					}
-				}, 5000);
 			}
 		}
 
 		// 处理WebSocket消息
 		function handleWebSocketMessage(message) {
-			// 兼容后端消息类型映射
-			let msgType = message.type;
-			if (msgType === 'voteUpdate') {
-				msgType = 'votes-updated';
-			} else if (msgType === 'liveStatus') {
-				// 可以处理直播状态变化，暂时忽略
-				return;
-			} else if (msgType === 'aiStatus') {
-				return;
-			} else if (msgType === 'aiContent') {
-				return;
-			} else if (msgType === 'comment') {
-				return;
-			} else if (msgType === 'viewersUpdate') {
-				return;
-			}
-			
-			if (msgType === 'votes-updated' || msgType === 'vote-updated') {
+			if (message.type === 'votes-updated' || message.type === 'vote-updated') {
 				const votes = message.data?.votes || message.data || message;
 				if (votes.leftVotes !== undefined && votes.rightVotes !== undefined) {
 					const totalVotes = votes.totalVotes || (votes.leftVotes + votes.rightVotes);
@@ -1518,7 +1474,7 @@
 				}
 			}
 			// 🔧 新增：处理辩论流程更新事件
-			else if (msgType === 'debate-flow-updated') {
+			else if (message.type === 'debate-flow-updated') {
 				const flowData = message.data || message;
 				// 检查是否是当前流的更新
 				if (flowData.streamId === currentStreamId && flowData.segments) {
@@ -1528,7 +1484,7 @@
 				}
 			}
 			// 🔧 新增：处理辩论流程控制命令事件
-			else if (msgType === 'debate-flow-control') {
+			else if (message.type === 'debate-flow-control') {
 				const controlData = message.data || message;
 				// 检查是否是当前流的控制
 				if (controlData.streamId === currentStreamId) {

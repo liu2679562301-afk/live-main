@@ -1,5 +1,6 @@
 package com.debate.livedebateserver.service;
 
+import com.debate.livedebateserver.websocket.WebSocketMessageBroadcaster;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -12,7 +13,7 @@ import java.util.Map;
 
 /**
  * WebSocket服务类
- * 负责广播实时事件到所有连接的客户端
+ * 负责广播实时事件到所有连接的客户端（同时支持STOMP和原生WebSocket）
  *
  * @author lf
  * @version 1.0.0
@@ -27,6 +28,9 @@ public class WebSocketService {
 
     @Autowired
     private ObjectMapper objectMapper;
+    
+    @Autowired(required = false)
+    private WebSocketMessageBroadcaster webSocketMessageBroadcaster;
 
     /**
      * 广播投票更新事件
@@ -46,6 +50,11 @@ public class WebSocketService {
         data.put("timestamp", System.currentTimeMillis());
         
         broadcast("/topic/vote-updates", data);
+        
+        // 同时广播到原生WebSocket客户端
+        if (webSocketMessageBroadcaster != null) {
+            webSocketMessageBroadcaster.broadcastVoteUpdate(leftVotes, rightVotes, streamId);
+        }
     }
 
     /**
@@ -68,6 +77,11 @@ public class WebSocketService {
         data.put("timestamp", System.currentTimeMillis());
         
         broadcast("/topic/live-status", data);
+        
+        // 同时广播到原生WebSocket客户端
+        if (webSocketMessageBroadcaster != null) {
+            webSocketMessageBroadcaster.broadcastLiveStatus(isLive, streamUrl, streamId);
+        }
     }
 
     /**
@@ -86,6 +100,11 @@ public class WebSocketService {
         data.put("timestamp", System.currentTimeMillis());
         
         broadcast("/topic/ai-status", data);
+        
+        // 同时广播到原生WebSocket客户端
+        if (webSocketMessageBroadcaster != null) {
+            webSocketMessageBroadcaster.broadcastAIStatus(status, streamId);
+        }
     }
 
     /**
@@ -109,6 +128,11 @@ public class WebSocketService {
         }
         
         broadcast("/topic/ai-content", data);
+        
+        // 同时广播到原生WebSocket客户端
+        if (webSocketMessageBroadcaster != null) {
+            webSocketMessageBroadcaster.broadcastAIContent(id, text, side, timestamp, streamId);
+        }
     }
 
     /**
@@ -136,6 +160,11 @@ public class WebSocketService {
         }
         
         broadcast("/topic/comments", data);
+        
+        // 同时广播到原生WebSocket客户端
+        if (webSocketMessageBroadcaster != null) {
+            webSocketMessageBroadcaster.broadcastComment(id, contentId, user, text, avatar, timestamp, streamId);
+        }
     }
 
     /**
@@ -152,6 +181,11 @@ public class WebSocketService {
         data.put("timestamp", System.currentTimeMillis());
         
         broadcast("/topic/viewers-updates", data);
+        
+        // 同时广播到原生WebSocket客户端
+        if (webSocketMessageBroadcaster != null) {
+            webSocketMessageBroadcaster.broadcastViewersUpdate(streamId, viewers);
+        }
     }
 
     /**

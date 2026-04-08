@@ -13,9 +13,6 @@ class ApiInterceptor {
       retryDelay: 1000,
       retryCondition: (error) => {
         // 网络错误或5xx服务器错误时重试
-        if (!error || typeof error.message !== 'string') {
-          return false;
-        }
         return error.message.includes('network') || 
                error.message.includes('timeout') ||
                (error.statusCode && error.statusCode >= 500);

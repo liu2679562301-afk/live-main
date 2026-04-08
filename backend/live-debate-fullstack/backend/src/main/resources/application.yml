@@ -1,5 +1,5 @@
 server:
-  port: 8081
+  port: ${PORT:8081}
   servlet:
     context-path: /
 
@@ -15,7 +15,7 @@ spring:
 # 跨域配置
 cors:
   enabled: true
-  allowed-origins: "*"
+  allowed-origins: ${CORS_ALLOWED_ORIGINS:*}
   allowed-methods: "GET,POST,PUT,DELETE,OPTIONS,PATCH"
   allowed-headers: "*"
   max-age: 3600
@@ -23,25 +23,25 @@ cors:
 # 应用配置
 app:
   mock:
-    enabled: true
+    enabled: ${MOCK_ENABLED:true}
     seed: 12345
   websocket:
-    enabled: true
+    enabled: ${WEBSOCKET_ENABLED:true}
     endpoint: "/ws"
   storage:
-    enabled: true
+    enabled: ${STORAGE_ENABLED:true}
     file-path: "./data/data.json"
 logging:
   level:
-    com.debate: DEBUG
+    com.debate: ${LOG_LEVEL:DEBUG}
     org.springframework.web: INFO
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
 
 minio:
-  endpoint: http://localhost:9000
-  access-key: admin
-  secret-key: admin123
-  bucket: recordings
-  region: us-east-1
-  secure: false  # 因为是 HTTP 本地连接
+  endpoint: ${MINIO_ENDPOINT:false}
+  access-key: ${MINIO_ACCESS_KEY:admin}
+  secret-key: ${MINIO_SECRET_KEY:admin123}
+  bucket: ${MINIO_BUCKET:recordings}
+  region: ${MINIO_REGION:us-east-1}
+  secure: ${MINIO_SECURE:false}

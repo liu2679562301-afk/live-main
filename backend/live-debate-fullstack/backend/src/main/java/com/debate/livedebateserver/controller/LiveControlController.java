@@ -97,7 +97,28 @@ public class LiveControlController {
      * @return 数据概览信息
      */
     @GetMapping("/v1/admin/dashboard")
+    public ApiResponse<Map<String, Object>> getDashboardV1(@RequestParam(required = false) String stream_id) {
+        return getDashboardData(stream_id);
+    }
+
+    /**
+     * 数据概览（兼容旧版本，用于前端H5页面）
+     * 
+     * @param stream_id 直播流ID（可选）
+     * @return 数据概览信息，包含 isLive 字段用于前端判断直播状态
+     */
+    @GetMapping("/admin/dashboard")
     public ApiResponse<Map<String, Object>> getDashboard(@RequestParam(required = false) String stream_id) {
+        return getDashboardData(stream_id);
+    }
+
+    /**
+     * 获取数据概览的通用方法
+     * 
+     * @param stream_id 直播流ID
+     * @return 数据概览信息
+     */
+    private ApiResponse<Map<String, Object>> getDashboardData(String stream_id) {
         Map<String, Object> dashboard = new HashMap<>();
         dashboard.put("timestamp", LocalDateTime.now());
 
@@ -109,9 +130,23 @@ public class LiveControlController {
                 .count();
         dashboard.put("liveStreams", liveCount);
 
+        // 添加 isLive 字段（用于前端判断当前流是否正在直播）
+        boolean isLive = false;
+        if (stream_id != null && !stream_id.isEmpty()) {
+            isLive = mockDataService.getLiveStatus(stream_id);
+        } else {
+            // 如果没有指定 stream_id，检查是否有任何流正在直播
+            isLive = liveCount > 0;
+        }
+        dashboard.put("isLive", isLive);
+
         // 投票数据
         VoteData voteData = mockDataService.getVoteData(stream_id);
         dashboard.put("votes", voteData);
+        if (voteData != null) {
+            dashboard.put("leftVotes", voteData.getLeftVotes());
+            dashboard.put("rightVotes", voteData.getRightVotes());
+        }
 
         // AI内容数量
         List<com.debate.livedebateserver.model.AIContent> aiContents = mockDataService.getAIContents(stream_id);
@@ -119,6 +154,14 @@ public class LiveControlController {
 
         // 辩题信息
         dashboard.put("debateTopic", mockDataService.getDebateTopic());
+
+        // 直播流信息
+        LiveStream activeStream = mockDataService.getActiveStream();
+        if (activeStream != null) {
+            dashboard.put("activeStreamUrl", activeStream.getUrl());
+            dashboard.put("activeStreamName", activeStream.getName());
+            dashboard.put("activeStreamId", activeStream.getId());
+        }
 
         return ApiResponse.success(dashboard);
     }

@@ -49,12 +49,22 @@ public class MinioService {
 
     /** 默认预签名URL过期时间（分钟）：7天 */
     private static final int DEFAULT_EXPIRY_MINUTES = 7 * 24 * 60;
+    
+    /** MinIO是否可用 */
+    private boolean minioAvailable = false;
 
     /**
      * 初始化，确保Bucket存在
      */
     @PostConstruct
     public void init() {
+        // 检查是否禁用MinIO
+        if (endpoint == null || endpoint.isEmpty() || "false".equalsIgnoreCase(endpoint)) {
+            log.warn("MinIO endpoint未配置或已禁用，MinIO服务将不可用");
+            this.minioAvailable = false;
+            return;
+        }
+        
         log.info("初始化Minio服务，endpoint: {}, bucket: {}", endpoint, bucketName);
         try {
             // 测试连接
@@ -86,10 +96,34 @@ public class MinioService {
                 }
             }
             log.info("Minio服务初始化成功");
+            this.minioAvailable = true;
         } catch (Exception e) {
             log.error("初始化Minio Bucket失败: endpoint={}, bucket={}, error={}", endpoint, bucketName, e.getMessage(), e);
-            throw new RuntimeException("Minio Bucket初始化失败", e);
+            // 在Railway环境中，MinIO连接失败时不抛出异常，让应用继续启动
+            String environment = System.getenv("RAILWAY_ENVIRONMENT");
+            if (environment != null && environment.equals("production")) {
+                log.warn("生产环境MinIO连接失败，但应用将继续启动（MinIO功能将被禁用）");
+                this.minioAvailable = false;
+            } else {
+                throw new RuntimeException("Minio Bucket初始化失败", e);
+            }
         }
+    }
+    
+    /**
+     * 检查MinIO是否可用
+     */
+    private void checkMinioAvailable() {
+        if (!minioAvailable) {
+            throw new IllegalStateException("MinIO服务未初始化或已禁用");
+        }
+    }
+    
+    /**
+     * 检查MinIO是否可用（返回布尔值，不抛出异常）
+     */
+    public boolean isAvailable() {
+        return minioAvailable;
     }
 
     /**
@@ -101,6 +135,9 @@ public class MinioService {
      * @return 对象键
      */
     public String uploadFile(MultipartFile file, String objectKey, Map<String, String> metadata) {
+        // 检查MinIO是否可用
+        checkMinioAvailable();
+        
         try {
             // 确保objectKey不为空
             if (objectKey == null || objectKey.trim().isEmpty()) {
@@ -199,6 +236,12 @@ public class MinioService {
      * @return 是否存在
      */
     public boolean objectExists(String objectKey) {
+        // 检查MinIO是否可用
+        if (!minioAvailable) {
+            log.warn("MinIO服务未初始化，无法检查对象是否存在: {}", objectKey);
+            return false;
+        }
+        
         try {
             minioClient.statObject(StatObjectArgs.builder()
                     .bucket(bucketName)

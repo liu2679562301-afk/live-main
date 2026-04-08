@@ -1,0 +1,10 @@
+[build]
+builder = "nixpacks"
+buildCommand = "npm install"
+startCommand = "npm start"
+
+[[services]]
+name = "gateway"
+port = 8080
+healthcheckPath = "/health"
+healthcheckTimeout = 300

@@ -24,8 +24,8 @@ const proxy = httpProxy.createProxyServer({
   ws: true
 });
 
-// 后端API服务器地址
-const BACKEND_API_URL = 'http://localhost:8081';
+// 后端API服务器地址（从环境变量读取，Railway部署用）
+const BACKEND_API_URL = process.env.BACKEND_URL || 'http://localhost:8081';
 
 // CORS配置 - 允许所有来源（开发环境）
 app.use(cors({
@@ -93,6 +93,25 @@ server.on('upgrade', (req, socket, head) => {
   }
 });
 
+// ==================== 健康检查 ====================
+// 必须在404处理之前定义
+
+app.get('/health', (req, res) => {
+  res.json({
+    code: 0,
+    message: '网关服务运行正常',
+    data: {
+      service: 'live-debate-gateway',
+      version: '2.0.0',
+      status: 'running',
+      timestamp: Date.now(),
+      backend: BACKEND_API_URL,
+      websocketEndpoint: BACKEND_WS_URL + '/ws'
+    },
+    timestamp: Date.now()
+  });
+});
+
 // ==================== 错误处理 ====================
 
 // 代理错误处理
@@ -119,37 +138,22 @@ app.use((req, res) => {
   });
 });
 
-// ==================== 健康检查 ====================
-
-app.get('/health', (req, res) => {
-  res.json({
-    code: 0,
-    message: '网关服务运行正常',
-    data: {
-      service: 'live-debate-gateway',
-      version: '2.0.0',
-      status: 'running',
-      timestamp: Date.now(),
-      backend: BACKEND_API_URL,
-      websocketEndpoint: BACKEND_WS_URL + '/ws'
-    },
-    timestamp: Date.now()
-  });
-});
-
 // ==================== 启动服务器 ====================
 
-const PORT = 8080;
+// Railway环境使用PORT环境变量，本地开发使用8080
+const PORT = process.env.PORT ? parseInt(process.env.PORT) : 8080;
 
-server.listen(PORT, () => {
+server.listen(PORT, '0.0.0.0', () => {
   console.log('═══════════════════════════════════════');
   console.log('🚀 网关代理服务已启动');
   console.log('═══════════════════════════════════════');
   console.log(`网关地址: http://localhost:${PORT}`);
   console.log(`后端API: ${BACKEND_API_URL}`);
   console.log(`WebSocket端点: ws://localhost:${PORT}/ws`);
-  // console.log(`后台管理: http://localhost:${PORT}/admin`); // 如需静态文件服务请取消注释
   console.log(`健康检查: http://localhost:${PORT}/health`);
+  console.log('═══════════════════════════════════════');
+  console.log(`环境: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`端口: ${PORT}`);
   console.log('═══════════════════════════════════════');
 });
 

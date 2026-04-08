@@ -8,22 +8,22 @@
     "dev": "nodemon server.js",
     "swagger": "node swagger-server.js",
     "swagger:dev": "nodemon swagger-server.js",
-    "dev:h5": "cross-env UNI_PLATFORM=h5 vue-cli-service uni-build --mode development",
-    "build:h5": "cross-env UNI_PLATFORM=h5 vue-cli-service uni-build --mode production",
-    "dev:mp-weixin": "cross-env UNI_PLATFORM=mp-weixin vue-cli-service uni-build --mode development",
-    "build:mp-weixin": "cross-env UNI_PLATFORM=mp-weixin vue-cli-service uni-build --mode production"
+    "serve": "node server.js",
+    "h5": "node h5-server.js",
+    "dev:h5": "node h5-server.js",
+    "build:h5": "echo '请使用 HBuilderX 编译H5版本'",
+    "dev:mp-weixin": "echo '请使用 HBuilderX 运行到微信小程序'",
+    "build:mp-weixin": "echo '请使用 HBuilderX 编译小程序版本'"
   },
   "dependencies": {
     "@apidevtools/swagger-parser": "^12.1.0",
     "@dcloudio/uni-ui": "^1.5.11",
     "@lottiefiles/dotlottie-vue": "^0.10.5",
-    "@stomp/stompjs": "^7.3.0",
     "cors": "^2.8.5",
     "express": "^4.18.2",
     "http-proxy-middleware": "^2.0.6",
     "lottie-miniprogram": "^1.0.12",
     "lottie-web": "^5.13.0",
-    "sockjs-client": "^1.6.1",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",
     "uuid": "^8.3.2",
@@ -33,9 +33,7 @@
   },
   "devDependencies": {
     "@dcloudio/uni-app-plus": "^2.0.2-4070620250821001",
-    "@dcloudio/uni-cli-i18n": "^2.0.2-5000620260331001",
     "@dcloudio/uni-cli-shared": "^2.0.2-4070620250821001",
-    "@dcloudio/vue-cli-plugin-uni": "^2.0.2-5000620260331001",
     "@vue/cli-service": "^5.0.9",
     "cross-env": "^10.1.0",
     "nodemon": "^3.0.1"

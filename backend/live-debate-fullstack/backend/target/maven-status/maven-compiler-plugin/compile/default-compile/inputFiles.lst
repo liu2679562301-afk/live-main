@@ -4,6 +4,7 @@ C:\Study\Web_FrontEnd\WX\Live-main\backend\live-debate-fullstack\backend\src\mai
 C:\Study\Web_FrontEnd\WX\Live-main\backend\live-debate-fullstack\backend\src\main\java\com\debate\livedebateserver\model\DataContainer.java
 C:\Study\Web_FrontEnd\WX\Live-main\backend\live-debate-fullstack\backend\src\main\java\com\debate\livedebateserver\model\VoteData.java
 C:\Study\Web_FrontEnd\WX\Live-main\backend\live-debate-fullstack\backend\src\main\java\com\debate\livedebateserver\controller\LiveControlController.java
+C:\Study\Web_FrontEnd\WX\Live-main\backend\live-debate-fullstack\backend\src\main\java\com\debate\livedebateserver\websocket\WebSocketMessageBroadcaster.java
 C:\Study\Web_FrontEnd\WX\Live-main\backend\live-debate-fullstack\backend\src\main\java\com\debate\livedebateserver\LiveDebateServerApplication.java
 C:\Study\Web_FrontEnd\WX\Live-main\backend\live-debate-fullstack\backend\src\main\java\com\debate\livedebateserver\config\MinioConfig.java
 C:\Study\Web_FrontEnd\WX\Live-main\backend\live-debate-fullstack\backend\src\main\java\com\debate\livedebateserver\controller\LiveStreamController.java
@@ -21,6 +22,8 @@ C:\Study\Web_FrontEnd\WX\Live-main\backend\live-debate-fullstack\backend\src\mai
 C:\Study\Web_FrontEnd\WX\Live-main\backend\live-debate-fullstack\backend\src\main\java\com\debate\livedebateserver\controller\RecordingController.java
 C:\Study\Web_FrontEnd\WX\Live-main\backend\live-debate-fullstack\backend\src\main\java\com\debate\livedebateserver\controller\StatisticsController.java
 C:\Study\Web_FrontEnd\WX\Live-main\backend\live-debate-fullstack\backend\src\main\java\com\debate\livedebateserver\service\WebSocketService.java
+C:\Study\Web_FrontEnd\WX\Live-main\backend\live-debate-fullstack\backend\src\main\java\com\debate\livedebateserver\websocket\NativeWebSocketHandler.java
 C:\Study\Web_FrontEnd\WX\Live-main\backend\live-debate-fullstack\backend\src\main\java\com\debate\livedebateserver\controller\AIContentController.java
 C:\Study\Web_FrontEnd\WX\Live-main\backend\live-debate-fullstack\backend\src\main\java\com\debate\livedebateserver\service\JsonStorageService.java
+C:\Study\Web_FrontEnd\WX\Live-main\backend\live-debate-fullstack\backend\src\main\java\com\debate\livedebateserver\config\NativeWebSocketConfig.java
 C:\Study\Web_FrontEnd\WX\Live-main\backend\live-debate-fullstack\backend\src\main\java\com\debate\livedebateserver\controller\SrsCallbackController.java

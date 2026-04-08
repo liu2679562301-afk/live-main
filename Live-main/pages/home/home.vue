@@ -50,11 +50,6 @@
 			</view>
 				
 				<view class="live-video">
-					<!-- 切换视频源按钮 - 右上角（用于切换直播/录播） -->
-					<view class="switch-video-btn" @click="switchVideoSource">
-						<text class="switch-icon">📼</text>
-					</view>
-					
 					<!-- #ifdef MP-WEIXIN -->
 					<!-- 使用原生 video 组件播放直播流 -->
 					<video
@@ -79,35 +74,40 @@
 					</view>
 					<!-- #endif -->
 					
-					<!-- #ifndef MP-WEIXIN -->
-					<!-- H5环境使用video标签 -->
-					<video
-						v-if="isLiveStarted && liveStreamUrl"
-						:key="liveStreamUrl"
-						:src="liveStreamUrl"
-						class="live-player"
-						autoplay
-						:muted="isMuted"
-						controls
-						@error="handleLiveError">
-					</video>
-					<!-- #endif -->
+<!-- #ifndef MP-WEIXIN -->
+				<!-- H5环境使用video标签 -->
+				<video
+					v-if="isLiveStarted && liveStreamUrl"
+					:key="liveStreamUrl"
+					:src="liveStreamUrl"
+					class="live-player"
+					autoplay
+					:muted="isMuted"
+					controls
+					@error="handleLiveError">
+				</video>
+				<!-- #endif -->
 
-					<!-- 直播开始前显示占位内容 -->
-					<view v-if="!isLiveStarted" class="video-placeholder">
-						<text class="placeholder-icon">🎬</text>
-						<text class="placeholder-text">直播未开始</text>
-					</view>
+			<!-- 录播按钮 - 视频右上角 -->
+			<view class="recording-button" @click="showRecordingList">
+				<text class="recording-btn-text">📹 录播</text>
+			</view>
 
-					<!-- 播放按钮 - 左下角 -->
-					<view class="play-button" v-if="!isLiveStarted" @click="startLive">
-						<image src="/static/iconfont/bofang.png" class="play-icon-img" mode="aspectFit"></image>
-					</view>
+<!-- 直播开始前显示占位内容 -->
+			<view v-if="!isLiveStarted" class="video-placeholder">
+				<text class="placeholder-icon">🎬</text>
+				<text class="placeholder-text">{{ isRecordingMode ? '正在播放录播' : '直播未开始' }}</text>
+			</view>
 
-					<!-- 直播状态指示器 -->
-					<view class="live-status-overlay" v-if="isLiveStarted">
-						<text class="live-indicator">🔴 LIVE</text>
-					</view>
+<!-- 播放按钮 - 左下角 -->
+		<view class="play-button" v-if="!isLiveStarted && !isRecordingMode" @click="startLive">
+			<image src="/static/iconfont/bofang.png" class="play-icon-img" mode="aspectFit"></image>
+		</view>
+
+		<!-- 直播/录播状态指示器 -->
+		<view class="live-status-overlay" v-if="isLiveStarted">
+			<text class="live-indicator">{{ isRecordingMode ? '📹 录播' : '🔴 LIVE' }}</text>
+		</view>
 				</view>
 			</view>
 		</view>
@@ -406,7 +406,6 @@
 <script>
 	import PopDecoration from '@/components/PopDecoration.vue'
 	import apiService from '@/utils/api-service.js'
-	import { createStompClient } from '@/utils/uni-stomp-client.js'
 	
 	// 导入直播配置
 	import liveConfig from '@/config/live-config.js'
@@ -428,11 +427,6 @@
 				liveStreamUrl: '', // rtmp://xxx 或 https://xxx.m3u8
 				isMuted: false, // 是否静音
 				liveStatus: '', // 直播状态
-				
-				// 视频播放模式：'live' 或 'recording'
-				videoMode: 'live',
-				// 录播列表
-				recordings: [],
 
 				// 顶部对抗条数据（实时统计，不受用户操作影响）
 				topLeftVotes: 0,
@@ -495,9 +489,11 @@
 			'/static/xiangsu/yumi-daipi.png'
 		],
 			
-			// 直播状态和预设观点相关
-				isLiveStarted: false, // 直播是否已开始
-				presetOpinion: 50, // 预设观点倾向 (0-100, 初始50表示50%票数投正方，50%投反方)
+// 直播状态和预设观点相关
+			isLiveStarted: false, // 直播是否已开始
+			isRecordingMode: false, // 是否为录播模式
+			recordingTitle: '', // 录播标题
+			presetOpinion: 50, // 预设观点倾向 (0-100, 初始50表示50%票数投正方，50%投反方)
 				showPresetSlider: true, // 是否显示预设滑块
 				showPresetPanel: true, // 是否显示预设观点面板（直播开始后可通过按钮控制）
 				isValueChanging: false, // 数值变化动画状态
@@ -573,16 +569,12 @@
 				effectCleanupInterval: null, // 特效清理定时器
 				lastEffectCleanup: 0, // 上次清理时间
 				
-				// WebSocket 连接（原生WebSocket，保持兼容）
-				socketTask: null, // WebSocket连接实例
-				wsReconnectTimer: null, // WebSocket重连定时器
-				wsHeartbeatTimer: null, // WebSocket心跳定时器
-				wsReconnectAttempts: 0, // WebSocket重连次数
-				wsMaxReconnectAttempts: 5, // WebSocket最大重连次数
-				
-				// STOMP over SockJS 连接（用于Spring Boot后端）
-				stompClient: null, // STOMP客户端实例
-				stompSubscriptions: [], // STOMP订阅列表
+// WebSocket 连接
+			socketTask: null, // WebSocket连接实例
+			wsReconnectTimer: null, // WebSocket重连定时器
+			wsHeartbeatTimer: null, // WebSocket心跳定时器
+			wsReconnectAttempts: 0, // WebSocket重连次数
+			wsMaxReconnectAttempts: 2, // WebSocket最大重连次数（减少为2次，快速失败）
 				
 				// ==================== HLS 播放器配置 ====================
 				hlsConfig: {
@@ -694,14 +686,7 @@
 			// 接收 streamId 参数（从直播选择页传递）
 			if (options && options.streamId) {
 				this.streamId = options.streamId;
-				// 保存到本地存储，以便刷新后恢复
-				uni.setStorageSync('streamId', this.streamId);
 			} else {
-				// 尝试从本地存储恢复
-				const savedStreamId = uni.getStorageSync('streamId');
-				if (savedStreamId) {
-					this.streamId = savedStreamId;
-				}
 			}
 			
 			// 初始化API服务
@@ -817,18 +802,15 @@
 				}
 			}, 300); // 缩短延迟时间，更快显示票数
 			
-			// 启动定时轮询（作为WebSocket的备用方案）
+// 启动定时轮询（作为WebSocket的备用方案）- 录播模式下不启动
+		if (!this.isRecordingMode) {
 			this.startLiveStatusPolling();
-			
-			// 建立WebSocket连接（用于接收实时更新）
+		}
+		
+		// 建立WebSocket连接（用于接收实时更新）- 录播模式下不连接
+		if (!this.isRecordingMode) {
 			this.connectWebSocket();
-			
-			// 页面加载后尝试获取AI内容（即使直播未开始，也可能有历史内容）
-			setTimeout(() => {
-				if (this.streamId) {
-					this.fetchAIContent(true);
-				}
-			}, 1000);
+		}
 		},
 		onShow() {
 			// 再次确保切回可见时也是最新辩题
@@ -894,109 +876,6 @@
 			}, 1500);
 		},
 		methods: {
-			// ==================== 视频源切换方法 ====================
-			
-			/**
-			 * 切换视频源（直播 <-> 录播）
-			 * 点击按钮时触发，如果当前是直播模式，则切换到第一个录播；
-			 * 如果当前是录播模式，则切换回直播模式。
-			 */
-			async switchVideoSource() {
-				try {
-					// 使用与代码其他部分一致的 service 变量
-					const service = this.apiService || apiService;
-					
-					if (this.videoMode === 'live') {
-						// 切换到录播模式
-						uni.showLoading({ title: '加载录播中...', mask: true });
-						// 获取录播列表
-						const recordings = await service.getRecordings();
-						console.log('获取录播列表原始响应:', recordings);
-						if (!recordings || recordings.length === 0) {
-							uni.hideLoading();
-							uni.showToast({
-								title: '暂无录播文件',
-								icon: 'none',
-								duration: 2000
-							});
-							return;
-						}
-						// 根据当前 streamId 过滤录播
-						let filteredRecordings = recordings;
-						if (this.streamId) {
-							filteredRecordings = recordings.filter(rec => rec.streamId === this.streamId);
-							console.log(`根据 streamId(${this.streamId}) 过滤后录播:`, filteredRecordings);
-						}
-						if (filteredRecordings.length === 0) {
-							uni.hideLoading();
-							uni.showToast({
-								title: '该直播间暂无录播文件',
-								icon: 'none',
-								duration: 2000
-							});
-							return;
-						}
-						// 选择第一个录播（按时间倒序，最新的在前）
-						const sortedRecordings = filteredRecordings.sort((a, b) => 
-							new Date(b.createdAt || 0) - new Date(a.createdAt || 0)
-						);
-						const firstRecording = sortedRecordings[0];
-						console.log('选择的录播:', firstRecording);
-						// 获取预签名播放URL
-						let playUrl = '';
-						// 优先使用录播对象中已有的 playUrl 字段
-						if (firstRecording.playUrl) {
-							playUrl = firstRecording.playUrl;
-							console.log('✅ 使用录播对象中的 playUrl:', playUrl);
-						} else {
-							console.log('⚠️ 录播对象中无 playUrl，调用 API 获取');
-							playUrl = await service.getRecordingPlayUrl(firstRecording.id);
-							console.log('✅ 通过 API 获取的播放URL:', playUrl);
-						}
-						// 更新视频流地址
-						this.liveStreamUrl = playUrl;
-						this.videoMode = 'recording';
-						// 确保视频播放器显示
-						this.isLiveStarted = true;
-						uni.hideLoading();
-						uni.showToast({
-							title: '已切换到录播模式',
-							icon: 'success',
-							duration: 1500
-						});
-						console.log('切换到录播模式:', firstRecording.title, playUrl);
-					} else {
-						// 切换回直播模式
-						uni.showLoading({ title: '恢复直播中...', mask: true });
-						// 重新获取直播流地址
-						const dashboardData = await service.getDashboard(this.streamId);
-						if (dashboardData && dashboardData.liveStreamUrl) {
-							this.liveStreamUrl = dashboardData.liveStreamUrl;
-						} else {
-							// 如果无法获取，使用默认直播流地址
-							this.liveStreamUrl = 'http://192.168.31.189:8086/live/stream1.m3u8';
-						}
-						this.videoMode = 'live';
-						this.isLiveStarted = true;
-						uni.hideLoading();
-						uni.showToast({
-							title: '已切换回直播模式',
-							icon: 'success',
-							duration: 1500
-						});
-						console.log('切换回直播模式:', this.liveStreamUrl);
-					}
-				} catch (error) {
-					console.error('切换视频源失败:', error);
-					uni.hideLoading();
-					uni.showToast({
-						title: '切换失败: ' + (error.message || '未知错误'),
-						icon: 'none',
-						duration: 3000
-					});
-				}
-			},
-			
 			// ==================== 播放器配置方法 ====================
 
 			/**
@@ -1041,31 +920,232 @@
 				return 5; // HLS/RTMP 最大缓冲5秒
 			},
 
-			// 初始化API服务
-			async initApiService() {
-				try {
-					// 将导入的 apiService 赋值给 this.apiService，方便在方法中使用
-					this.apiService = apiService;
-					
-					// 从配置文件获取当前服务器地址
-					const configUrl = API_BASE_URL || 'http://192.168.31.249:8081';
-					
-					// 更新API服务配置为本地服务器
-					apiService.updateConfig(configUrl);
-					
-					// 获取当前服务器信息
-					this.apiServerInfo = apiService.getCurrentServerInfo();
-					this.serverUrl = configUrl; // 使用配置的地址
-					this.availableServers = this.apiServerInfo.available;
-					
-					// 确保 this.apiService 也使用正确的地址
-					this.apiService = apiService;
-					
-				} catch (error) {
+// 初始化API服务
+		async initApiService() {
+			try {
+				// 将导入的 apiService 赋值给 this.apiService，方便在方法中使用
+				this.apiService = apiService;
+				
+				// 从配置文件获取当前服务器地址
+				const configUrl = API_BASE_URL || 'http://192.168.31.249:8081';
+				
+				// 更新API服务配置为本地服务器
+				apiService.updateConfig(configUrl);
+				
+				// 获取当前服务器信息
+				this.apiServerInfo = apiService.getCurrentServerInfo();
+				this.serverUrl = configUrl; // 使用配置的地址
+				this.availableServers = this.apiServerInfo.available;
+				
+				// 确保 this.apiService 也使用正确的地址
+				this.apiService = apiService;
+				
+			} catch (error) {
+			}
+		},
+
+		/**
+		 * 加载第一个可用的录播（当没有直播流时自动调用）
+		 */
+		async loadFirstAvailableRecording() {
+			try {
+				console.log('📹 正在加载录播列表...');
+				const service = this.apiService || apiService;
+				if (!service) return;
+
+				// 获取录播列表
+				const recordings = await service.getRecordingsList();
+				
+				if (!recordings || recordings.length === 0) {
+					console.warn('⚠️ 没有可用的录播文件');
+					uni.showToast({
+						title: '暂无直播和录播内容',
+						icon: 'none',
+						duration: 3000
+					});
+					return;
 				}
-			},
+
+				// 筛选启用的录播
+				const enabledRecordings = recordings.filter(r => r.enabled !== false && r.playUrl);
+				
+				if (enabledRecordings.length === 0) {
+					console.warn('⚠️ 没有启用的录播文件');
+					uni.showToast({
+						title: '暂无可用的录播',
+						icon: 'none',
+						duration: 3000
+					});
+					return;
+				}
+
+				// 获取第一个录播的详细信息（确保有播放URL）
+				const firstRecording = enabledRecordings[0];
+				console.log('📹 找到录播:', firstRecording.title || firstRecording.filename);
+
+				// 直接使用录播的播放URL
+				if (firstRecording.playUrl) {
+					this.liveStreamUrl = firstRecording.playUrl;
+					this.isLiveStarted = true;
+					this.isRecordingMode = true;
+					this.recordingTitle = firstRecording.title || '录播回放';
+					
+					uni.showToast({
+						title: '正在播放录播',
+						icon: 'success',
+						duration: 2000
+					});
+					
+					console.log('✅ 录播加载成功:', this.recordingTitle);
+				} else {
+					console.error('❌ 录播没有播放URL');
+					uni.showToast({
+						title: '录播文件不可用',
+						icon: 'none'
+					});
+				}
+			} catch (error) {
+				console.error('❌ 加载录播失败:', error);
+				uni.showToast({
+					title: '录播加载失败',
+					icon: 'none'
+				});
+			}
+		},
+		
+		/**
+		 * 显示录播列表选择
+		 */
+		async showRecordingList() {
+			try {
+				const service = this.apiService || apiService;
+				if (!service) return;
+
+				uni.showLoading({
+					title: '加载录播列表...',
+					mask: true
+				});
+
+				// 获取录播列表
+				const recordings = await service.getRecordingsList();
+				
+				uni.hideLoading();
+
+				if (!recordings || recordings.length === 0) {
+					uni.showToast({
+						title: '暂无录播文件',
+						icon: 'none'
+					});
+					return;
+				}
+
+				// 筛选启用的录播
+				const enabledRecordings = recordings.filter(r => r.enabled !== false && r.playUrl);
+				
+				if (enabledRecordings.length === 0) {
+					uni.showToast({
+						title: '暂无可用的录播',
+						icon: 'none'
+					});
+					return;
+				}
+
+				// 构建选择列表
+				const itemList = enabledRecordings.map(r => {
+					const title = r.title || r.filename;
+					const duration = this.formatDuration(r.duration);
+					return `${title} (${duration})`;
+				});
+
+				// 显示选择菜单
+				uni.showActionSheet({
+					itemList: itemList,
+					success: (res) => {
+						const selectedRecording = enabledRecordings[res.tapIndex];
+						this.playSelectedRecording(selectedRecording);
+					},
+					fail: () => {
+						// 用户取消选择
+					}
+				});
+			} catch (error) {
+				uni.hideLoading();
+				console.error('❌ 加载录播列表失败:', error);
+				uni.showToast({
+					title: '加载失败',
+					icon: 'none'
+				});
+			}
+		},
+		
+		
+		
+		/**
+		 * 格式化时长
+		 * @param {number} seconds - 秒数
+		 * @returns {string} 格式化后的时长字符串
+		 */
+		formatDuration(seconds) {
+			if (!seconds || seconds <= 0) return '未知时长';
 			
-			// ==================== HLS转换辅助方法 ====================
+			const hours = Math.floor(seconds / 3600);
+			const minutes = Math.floor((seconds % 3600) / 60);
+			const secs = seconds % 60;
+			
+			if (hours > 0) {
+				return `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+			} else {
+				return `${minutes}:${secs.toString().padStart(2, '0')}`;
+			}
+		},
+		
+		/**
+		 * 播放选中的录播
+		 * @param {Object} recording - 录播对象
+		 */
+		async playSelectedRecording(recording) {
+			try {
+				if (!recording || !recording.playUrl) {
+					uni.showToast({
+						title: '录播文件不可用',
+						icon: 'none'
+					});
+					return;
+				}
+
+				console.log('📹 播放录播:', recording.title || recording.filename);
+				
+				// 停止当前直播（如果正在播放）
+				if (this.isLiveStarted && !this.isRecordingMode) {
+					this.isLiveStarted = false;
+					if (this.liveStatusPollingTimer) {
+						clearInterval(this.liveStatusPollingTimer);
+						this.liveStatusPollingTimer = null;
+					}
+					this.disconnectWebSocket();
+				}
+
+				// 设置录播地址和状态
+				this.liveStreamUrl = recording.playUrl;
+				this.isLiveStarted = true;
+				this.isRecordingMode = true;
+				this.recordingTitle = recording.title || '录播回放';
+				
+				uni.showToast({
+					title: '开始播放录播',
+					icon: 'success',
+					duration: 2000
+				});
+			} catch (error) {
+				console.error('❌ 播放录播失败:', error);
+				uni.showToast({
+					title: '播放失败',
+					icon: 'none'
+				});
+			}
+		},
+		
+		// ==================== HLS转换辅助方法 ====================
 			
 			/**
 			 * 智能设置流地址（自动转换为HLS格式）
@@ -1170,7 +1250,7 @@
 				}
 			},
 			
-			// 获取直播状态（通过 dashboard 接口 + 直播状态接口）
+			// 获取直播状态（通过 dashboard 接口）
 			async fetchLiveStatus() {
 				try {
 					const service = this.apiService || apiService;
@@ -1178,8 +1258,8 @@
 						return;
 					}
 					
-					// 🔧 如果指定了 streamId，获取该流的Dashboard状态
-					const dashboardData = await service.getDashboard(this.streamId);
+				// 🔧 如果指定了 streamId，获取该流的Dashboard状态
+				const dashboardData = await service.getDashboard(this.streamId);
 					
 					if (dashboardData) {
 						
@@ -1199,38 +1279,17 @@
 							}
 						}
 						
-						// 获取直播状态（优先从dashboard获取，否则从直播状态接口获取）
-						let nowLive = false;
-						if (dashboardData.isLive !== undefined) {
-							nowLive = dashboardData.isLive;
-						} else {
-							// 从直播状态接口获取
-							try {
-								const liveStatus = await service.getLiveStatus();
-								if (liveStatus && liveStatus.data && liveStatus.data.streams) {
-									// streams 对象格式: {"stream-001": true, "stream-002": true}
-									const streamIdToCheck = this.streamId || responseStreamId;
-									if (streamIdToCheck) {
-										nowLive = liveStatus.data.streams[streamIdToCheck] === true;
-									} else {
-										// 如果没有指定streamId，检查是否有任何直播正在进行
-										nowLive = Object.values(liveStatus.data.streams).some(status => status === true);
-									}
-								}
-							} catch (liveStatusError) {
-								console.warn('无法获取直播状态:', liveStatusError);
-								// 保持默认值 false
-							}
-						}
-						
+						// 更新直播状态
+					if (dashboardData.isLive !== undefined) {
 						const wasLive = this.isLiveStarted;
+						const nowLive = dashboardData.isLive;
 						
-						// 更新流地址（优先使用当前使用的流地址，否则使用启用的流地址）
-						const streamUrl = dashboardData.liveStreamUrl || dashboardData.activeStreamUrl;
-						if (streamUrl) {
-							// 使用智能转换方法设置HLS流地址
-							await this.setLiveStreamUrlWithHls(streamUrl, dashboardData.activeStreamName);
-						}
+					// 更新流地址（优先使用当前使用的流地址，否则使用启用的流地址）
+					const streamUrl = dashboardData.liveStreamUrl || dashboardData.activeStreamUrl;
+					if (streamUrl) {
+						// 使用智能转换方法设置HLS流地址
+						await this.setLiveStreamUrlWithHls(streamUrl, dashboardData.activeStreamName);
+					}
 						
 						// ⚠️ 重要：如果服务器显示直播已开始，但客户端状态未同步，强制同步
 						if (nowLive && !wasLive) {
@@ -1279,65 +1338,66 @@
 								}
 							});
 						} else if (nowLive && wasLive) {
-							// 直播已经在进行中，确保状态同步
-							if (!this.isLiveStarted) {
-								this.isLiveStarted = true;
-							}
-							// 确保流地址存在
-							if (!this.liveStreamUrl && streamUrl) {
-								await this.setLiveStreamUrlWithHls(streamUrl, dashboardData.activeStreamName);
-							}
-						} else if (!nowLive && wasLive) {
-							// 🔧 直播从开始变为停止 - 强制退出并返回直播选择页面
-							this.isLiveStarted = false;
-							
-							uni.showToast({
-								title: '直播已结束，即将返回',
-								icon: 'none',
-								duration: 2000
-							});
-							
-							// 🔧 延迟1.5秒后自动返回直播选择页面
-							setTimeout(() => {
-								// 使用 redirectTo 替换当前页面，避免用户通过返回按钮回到已停止的直播页面
-								uni.redirectTo({
-									url: '/pages/live-select/live-select',
-									success: () => {
-									},
-									fail: (err) => {
-										// 如果 redirectTo 失败，尝试使用 navigateBack
-										uni.navigateBack({
-											delta: 1,
-											fail: () => {
-												// 如果 navigateBack 也失败，尝试使用 navigateTo
-												uni.navigateTo({
-													url: '/pages/live-select/live-select'
-												});
-											}
-										});
-									}
-								});
-							}, 1500);
-						} else {
-							// 状态没有变化，但确保状态同步
-							if (nowLive !== wasLive) {
-								this.isLiveStarted = nowLive;
-								
-								// 如果直播已开始，但还未启动AI内容获取，则启动
-								if (nowLive && typeof this.startAIContentAfterLiveStart === 'function') {
-									setTimeout(() => {
-										this.startAIContentAfterLiveStart();
-									}, 1000);
+						// 直播已经在进行中，确保状态同步
+						if (!this.isLiveStarted) {
+							this.isLiveStarted = true;
+						}
+						// 确保流地址存在
+						if (!this.liveStreamUrl && streamUrl) {
+							await this.setLiveStreamUrlWithHls(streamUrl, dashboardData.activeStreamName);
+						}
+					} else if (!nowLive && wasLive) {
+						// 🔧 直播从开始变为停止 - 强制退出并返回直播选择页面
+						this.isLiveStarted = false;
+						
+						uni.showToast({
+							title: '直播已结束，即将返回',
+							icon: 'none',
+							duration: 2000
+						});
+						
+						// 🔧 延迟1.5秒后自动返回直播选择页面
+						setTimeout(() => {
+							// 使用 redirectTo 替换当前页面，避免用户通过返回按钮回到已停止的直播页面
+							uni.redirectTo({
+								url: '/pages/live-select/live-select',
+								success: () => {
+								},
+								fail: (err) => {
+									// 如果 redirectTo 失败，尝试使用 navigateBack
+									uni.navigateBack({
+										delta: 1,
+										fail: () => {
+											// 如果 navigateBack 也失败，尝试使用 navigateTo
+											uni.navigateTo({
+												url: '/pages/live-select/live-select'
+											});
+										}
+									});
 								}
-							}
-							
-							// 如果当前直播已开始，确保有流地址并启动AI内容获取
-							if (nowLive && this.isLiveStarted && this.liveStreamUrl) {
+							});
+						}, 1500);
+					} else {
+								// 状态没有变化，但确保状态同步
+								if (nowLive !== wasLive) {
+									this.isLiveStarted = nowLive;
+									
+									// 如果直播已开始，但还未启动AI内容获取，则启动
+									if (nowLive && typeof this.startAIContentAfterLiveStart === 'function') {
+										setTimeout(() => {
+											this.startAIContentAfterLiveStart();
+										}, 1000);
+									}
+								}
 								
-								if (!this.recognitionTimer && typeof this.startAIContentRealTimeUpdate === 'function') {
-									setTimeout(() => {
-										this.startAIContentAfterLiveStart();
-									}, 1000);
+								// 如果当前直播已开始，确保有流地址并启动AI内容获取
+								if (nowLive && this.isLiveStarted && this.liveStreamUrl) {
+									
+									if (!this.recognitionTimer && typeof this.startAIContentRealTimeUpdate === 'function') {
+										setTimeout(() => {
+											this.startAIContentAfterLiveStart();
+										}, 1000);
+									}
 								}
 							}
 						}
@@ -1896,11 +1956,9 @@
 					const service = this.apiService || apiService;
 					
 					// 🔍 调试日志：检查 streamId 和当前票数
-					console.log(`fetchTopBarVotes: 开始，streamId=${this.streamId}, 当前显示票数 左=${this.topLeftVotes} 右=${this.topRightVotes}`);
 					
 					// 🔧 如果 streamId 不存在，记录警告但不继续（避免获取错误的全局数据）
 					if (!this.streamId) {
-						console.warn('fetchTopBarVotes: streamId 为空，跳过');
 						return;
 					}
 					
@@ -1909,11 +1967,9 @@
 					// 使用 /api/votes 获取票数（展示用）
                     const response = await service.getVote(this.streamId);
 					
-					console.log('fetchTopBarVotes: 响应', response);
 					
 					if (response) {
-						// 处理响应格式：可能 response.data 包含实际数据，或者 response 本身就是数据
-						const data = response.data || response;
+						const data = response;
 						
 						// 🔧 修复：始终使用数据库返回的票数，这是真实数据
 						if (data.leftVotes !== undefined && data.rightVotes !== undefined) {
@@ -1921,32 +1977,17 @@
                             const newRightVotes = data.rightVotes || 0;
                             const newTotal = newLeftVotes + newRightVotes;
                             
-                            // 计算显示值（实际票数 + 50）
-                            const displayLeft = Math.max(0, newLeftVotes + 50);
-                            const displayRight = Math.max(0, newRightVotes + 50);
-                            
-                            console.log(`fetchTopBarVotes: 实际票数 左=${newLeftVotes} 右=${newRightVotes}, 显示值 左=${displayLeft} 右=${displayRight}`);
-                            
-                            // 检查票数是否有变化
-                            if (displayLeft === this.topLeftVotes && displayRight === this.topRightVotes) {
-                                console.log('fetchTopBarVotes: 票数未变化，可能是首次获取或数据未更新');
-                            }
-                            
                             // 按展示规则：在后端返回的累计票数基础上，各自 +50 进行显示
-                            this.topLeftVotes = displayLeft;
-                            this.topRightVotes = displayRight;
-							console.log(`fetchTopBarVotes: 更新上方票数 左=${this.topLeftVotes} 右=${this.topRightVotes}`);
+                            this.topLeftVotes = Math.max(0, newLeftVotes + 50);
+                            this.topRightVotes = Math.max(0, newRightVotes + 50);
 						} else {
-							console.warn('fetchTopBarVotes: 响应数据缺少 leftVotes/rightVotes', data);
 						}
 					} else {
-						console.warn('fetchTopBarVotes: 响应为空');
 					}
 			} catch (error) {
 				// 🔧 获取失败时不要显示错误提示，避免干扰用户
 				// 只在开发环境显示详细错误
 				if (process.env.NODE_ENV === 'development') {
-					console.error('fetchTopBarVotes: 获取票数失败', error);
 				}
 			}
 		},
@@ -2017,19 +2058,16 @@
 					const service = this.apiService || apiService;
 					
 					if (!service) {
-						console.warn('fetchAIContent: apiService 不可用');
 						return;
 					}
 					
 					// 调试日志：检查当前使用的服务器地址
-					console.log('fetchAIContent: streamId=', this.streamId);
 					
 					// 传递 streamId 参数（如果存在）
 					const response = await service.getAiContent(this.streamId);
 					
-					console.log('fetchAIContent: 响应', response);
 					
-					if (response && (response.success || response.code === 0)) {
+					if (response && response.success) {
 						// 如果是初始加载，清空原有数据
 						if (isInitialLoad) {
 							this.aiMessages = [];
@@ -2038,8 +2076,8 @@
 						
 						// 检查是否有新内容
 						const serverMessages = response.data || [];
-						console.log('fetchAIContent: 服务器消息数量', serverMessages.length);
 						
+
 						// 添加新的服务器数据
 						let addedCount = 0;
 						serverMessages.forEach((content) => {
@@ -2048,7 +2086,7 @@
 								msg.serverId === content.id ||
 								(msg.text === content.text && msg.side === content.side)
 							);
-							
+
 							if (!exists) {
 								this.addAIMessage(content);
 								addedCount++;
@@ -2056,21 +2094,11 @@
 						});
 						
 						if (addedCount > 0) {
-							console.log(`fetchAIContent: 添加了 ${addedCount} 条新消息`);
 						} else {
-							console.log('fetchAIContent: 没有新消息');
 						}
 					} else {
-						console.warn('fetchAIContent: 响应未成功', response);
 					}
 				} catch (error) {
-					console.error('fetchAIContent: 获取AI内容失败', error);
-					// 可选：显示错误提示
-					uni.showToast({
-						title: '加载AI内容失败',
-						icon: 'none',
-						duration: 2000
-					});
 				}
 			},
 			
@@ -2251,12 +2279,10 @@
 			},
 			
 			async addCommentToServer(contentId, text, user = '匿名用户', avatar = '👤') {
-				console.log('addCommentToServer: 发送评论', { contentId, text, user });
 				try {
 					const response = await apiService.addComment(contentId, text, user, avatar);
 					
 					// 详细记录响应信息
-					console.log('addCommentToServer: 响应', response);
 					
 					// 判断请求是否成功：
 					// 1. 如果响应有 success 字段，检查其值
@@ -2265,17 +2291,15 @@
 					                 (response?.success === undefined && response !== undefined);
 					
 					if (isSuccess) {
-						console.log('addCommentToServer: 评论成功');
 						return response?.data || response;
 					} else {
 						// 如果响应明确表示失败，抛出错误
-						console.warn('addCommentToServer: 响应未成功', response);
 						const error = new Error(response?.message || '评论失败');
 						error.response = response;
 						throw error;
 					}
 				} catch (error) {
-					console.error('addCommentToServer: 捕获错误', error);
+					
 					// 根据错误类型显示不同的提示
 					let errorMessage = '添加评论失败';
 					if (error.statusCode === 400) {
@@ -2305,12 +2329,10 @@
 			},
 			
 			async likeContent(contentId, commentId = null) {
-				console.log('likeContent: 发送点赞', { contentId, commentId });
 				try {
 					const response = await apiService.like(contentId, commentId);
 					
 					// 详细记录响应信息
-					console.log('likeContent: 响应', response);
 					
 					// 判断请求是否成功：
 					// 1. 如果响应有 success 字段，检查其值
@@ -2319,17 +2341,15 @@
 					                 (response?.success === undefined && response !== undefined);
 					
 					if (isSuccess) {
-						console.log('likeContent: 点赞成功');
 						return response?.data || response;
 					} else {
 						// 如果响应明确表示失败，抛出错误
-						console.warn('likeContent: 响应未成功', response);
 						const error = new Error(response?.message || '点赞失败');
 						error.response = response;
 						throw error;
 					}
 				} catch (error) {
-					console.error('likeContent: 捕获错误', error);
+					
 					// 根据错误类型显示不同的提示
 					let errorMessage = '点赞失败';
 					if (error.statusCode === 400) {
@@ -2579,13 +2599,16 @@
 					// 更新百分数（异步防抖，避免频繁计算）
 					this.debouncedUpdatePresetOpinion();
 
-					// 直播开始后，发送投票到服务器
-				if (this.isLiveStarted) {
-					// 发送增量投票到服务器
-					this.sendVoteToServer(side);
-				} else {
+					// 直播开始后，只更新前端，不发送到服务器
+				// 只有通过拖动进度条并点击确定，才会发送到服务器
+				if (!this.isLiveStarted) {
 					// 直播开始前不执行投票操作
 					return;
+				}
+				// 直播开始后，点击投票按钮只更新前端显示，不发送数据库
+				// 标记票数已改变，需要点击确认按钮提交
+				if (this.isLiveStarted) {
+					this.votesChanged = true;
 				}
 				});
 
@@ -2594,40 +2617,6 @@
 				
 				// 触觉反馈和音效
 				this.triggerVibrationFeedback(side);
-			},
-			
-			// 发送投票到服务器
-			async sendVoteToServer(side) {
-				try {
-					const service = this.apiService || apiService;
-					// 每次投票增加10票（增量投票）
-					const voteCount = 10;
-					console.log(`sendVoteToServer: 发送投票 ${side} ${voteCount}票, streamId=${this.streamId}`);
-					const response = await service.userVote(side, voteCount, this.streamId);
-					console.log('sendVoteToServer: 响应', response);
-					
-					// 尝试从响应中提取最新票数并立即更新显示
-					if (response && (response.leftVotes !== undefined || response.data?.leftVotes !== undefined)) {
-						const data = response.data || response;
-						const newLeftVotes = data.leftVotes || 0;
-						const newRightVotes = data.rightVotes || 0;
-						// 按展示规则：在后端返回的累计票数基础上，各自 +50 进行显示
-						this.topLeftVotes = Math.max(0, newLeftVotes + 50);
-						this.topRightVotes = Math.max(0, newRightVotes + 50);
-						console.log(`sendVoteToServer: 立即更新上方票数 左=${this.topLeftVotes} 右=${this.topRightVotes}`);
-					}
-					
-					// 投票成功后，更新上方票数显示（确保数据最新）
-					this.fetchTopBarVotes();
-				} catch (error) {
-					console.error('sendVoteToServer: 投票失败', error);
-					// 可选：显示错误提示
-					uni.showToast({
-						title: '投票失败，请重试',
-						icon: 'none',
-						duration: 2000
-					});
-				}
 			},
 			
 			// 触发按钮点击特效
@@ -3612,116 +3601,75 @@
 			
 			// ==================== WebSocket 连接与消息处理 ====================
 			
-			// 建立WebSocket连接（使用STOMP over SockJS）
-			connectWebSocket() {
-				try {
-					// 断开现有连接
-					this.disconnectWebSocket();
+// 建立WebSocket连接
+		connectWebSocket() {
+		// 检查是否已超出最大重连次数
+		if (this.wsReconnectAttempts >= this.wsMaxReconnectAttempts) {
+			console.warn('WebSocket连接已达到最大重连次数，停止尝试');
+			return;
+		}
+		
+		try {
+			// 获取服务器地址
+			const serverUrl = this.getServerUrl() || API_BASE_URL;
+			// 将 http/https 替换为 ws/wss，并添加 /ws-native 路径（原生WebSocket端点）
+			const wsUrl = serverUrl.replace(/^http/, 'ws') + '/ws-native';
+			
+			console.log('尝试WebSocket连接:', wsUrl);
+				
+				// 创建WebSocket连接
+				this.socketTask = uni.connectSocket({
+					url: wsUrl,
+					success: () => {
+						console.log('WebSocket连接已创建');
+					},
+					fail: (err) => {
+						console.warn('WebSocket连接创建失败:', err);
+						this.scheduleWSReconnect();
+					}
+				});
 					
-					// 获取服务器地址
-					const serverUrl = this.getServerUrl() || API_BASE_URL;
+// 监听连接打开
+				this.socketTask.onOpen(() => {
+					this.wsReconnectAttempts = 0;
+					console.log('WebSocket连接已打开');
 					
-					// 创建STOMP客户端
-					this.stompClient = createStompClient({
-						endpoint: '/ws',
-						baseUrl: serverUrl,
-						reconnectDelay: 5000,
-						debug: process.env.NODE_ENV === 'development',
-						onConnect: (frame) => {
-							console.log('✅ STOMP WebSocket 已连接', frame);
-							this.wsReconnectAttempts = 0;
-							
-							// STOMP内置心跳，无需额外心跳
-							// 发送注册消息（如果需要）
-							this.sendWSMessage({
-								type: 'register',
-								clientType: 'miniprogram',
-								userId: uni.getStorageSync('userId') || 'guest'
-							});
-							
-							// 订阅相关主题
-							this.subscribeToTopics();
-						},
-						onError: (error) => {
-							console.error('❌ STOMP WebSocket 连接失败', error);
-							this.scheduleWSReconnect();
-						},
-						onDisconnect: () => {
-							console.log('🔌 STOMP WebSocket 已断开');
-							this.stompSubscriptions = [];
-							this.scheduleWSReconnect();
+					// 启动心跳
+					this.startWSHeartbeat();
+					
+					// 发送注册消息（原生WebSocket端点支持）
+					this.sendWSMessage({
+						type: 'register',
+						clientType: 'miniprogram',
+						userId: uni.getStorageSync('userId') || 'guest'
+					});
+				});
+					
+					// 监听消息接收
+					this.socketTask.onMessage((res) => {
+						try {
+							const data = JSON.parse(res.data);
+							this.handleWSMessage(data);
+						} catch (error) {
 						}
 					});
 					
-					// 开始连接
-					this.stompClient.connect();
+					// 监听连接关闭
+					this.socketTask.onClose(() => {
+						this.stopWSHeartbeat();
+						this.scheduleWSReconnect();
+					});
+					
+// 监听连接错误
+			this.socketTask.onError((err) => {
+				console.error('WebSocket连接错误:', err);
+				this.stopWSHeartbeat();
+				this.scheduleWSReconnect();
+			});
+					
 				} catch (error) {
-					console.error('❌ 创建 STOMP WebSocket 连接失败:', error);
 					this.scheduleWSReconnect();
 				}
-			},
-			
-			// 订阅STOMP主题
-			subscribeToTopics() {
-				if (!this.stompClient || !this.stompClient.isConnected()) {
-					console.warn('STOMP客户端未连接，无法订阅主题');
-					return;
-				}
-				
-				// 清理旧订阅
-				this.stompSubscriptions.forEach(sub => {
-					if (sub && sub.unsubscribe) {
-						sub.unsubscribe();
-					}
-				});
-				this.stompSubscriptions = [];
-				
-				// 订阅投票更新
-				const voteSub = this.stompClient.subscribe('/topic/vote-updates', (message) => {
-					// 映射消息类型为前端期望的格式
-					const mappedMessage = {
-						type: 'votes-updated',
-						data: message,
-						streamId: message.streamId || message.data?.streamId
-					};
-					this.handleWSMessage(mappedMessage);
-				});
-				if (voteSub) this.stompSubscriptions.push(voteSub);
-				
-				// 订阅直播状态
-				const liveSub = this.stompClient.subscribe('/topic/live-status', (message) => {
-					const mappedMessage = {
-						type: 'liveStatus',
-						data: message,
-						streamId: message.streamId || message.data?.streamId
-					};
-					this.handleWSMessage(mappedMessage);
-				});
-				if (liveSub) this.stompSubscriptions.push(liveSub);
-				
-				// 订阅AI状态
-				const aiSub = this.stompClient.subscribe('/topic/ai-status', (message) => {
-					const mappedMessage = {
-						type: 'aiStatus',
-						data: message,
-						streamId: message.streamId || message.data?.streamId
-					};
-					this.handleWSMessage(mappedMessage);
-				});
-				if (aiSub) this.stompSubscriptions.push(aiSub);
-				
-				// 订阅AI内容
-				const contentSub = this.stompClient.subscribe('/topic/ai-content', (message) => {
-					const mappedMessage = {
-						type: 'aiContent',
-						data: message,
-						streamId: message.streamId || message.data?.streamId
-					};
-					this.handleWSMessage(mappedMessage);
-				});
-				if (contentSub) this.stompSubscriptions.push(contentSub);
-				
-				console.log('📡 已订阅所有实时主题');
 			},
 			
 		// 处理WebSocket消息
@@ -3981,26 +3929,6 @@
 			
 			// 发送WebSocket消息
 			sendWSMessage(data) {
-				// 优先使用STOMP客户端发送
-				if (this.stompClient && this.stompClient.isConnected && this.stompClient.isConnected()) {
-					try {
-						// STOMP发送到通用目的地，后端可能需要特定目的地
-						// 这里发送到 /app/message（根据后端配置调整）
-						this.stompClient.send('/app/message', data);
-						console.log('📤 STOMP消息已发送:', data.type);
-					} catch (error) {
-						console.error('❌ STOMP发送消息失败:', error);
-						// 回退到原生WebSocket
-						this.sendViaNativeWebSocket(data);
-					}
-				} else {
-					// 使用原生WebSocket发送
-					this.sendViaNativeWebSocket(data);
-				}
-			},
-			
-			// 通过原生WebSocket发送消息
-			sendViaNativeWebSocket(data) {
 				if (this.socketTask) {
 					this.socketTask.send({
 						data: JSON.stringify(data),
@@ -4012,13 +3940,14 @@
 				}
 			},
 			
-			// 启动心跳
-			startWSHeartbeat() {
-				this.stopWSHeartbeat();
-				this.wsHeartbeatTimer = setInterval(() => {
-					this.sendWSMessage({ type: 'ping' });
-				}, 30000); // 每30秒发送一次心跳
-			},
+// 启动心跳
+		startWSHeartbeat() {
+			this.stopWSHeartbeat();
+			// 原生WebSocket端点支持心跳消息
+			this.wsHeartbeatTimer = setInterval(() => {
+				this.sendWSMessage({ type: 'ping' });
+			}, 30000); // 每30秒发送一次心跳
+		},
 			
 			// 停止心跳
 			stopWSHeartbeat() {
@@ -4028,31 +3957,32 @@
 				}
 			},
 			
-			// 计划重连
-			scheduleWSReconnect() {
-				// 清除之前的重连计划
-				if (this.wsReconnectTimer) {
-					clearTimeout(this.wsReconnectTimer);
-					this.wsReconnectTimer = null;
-				}
-				
-				// 检查是否达到最大重连次数
-				if (this.wsReconnectAttempts >= this.wsMaxReconnectAttempts) {
-					return;
-				}
-				
-				this.wsReconnectAttempts++;
-				const delay = Math.min(1000 * Math.pow(2, this.wsReconnectAttempts), 30000); // 指数退避，最大30秒
-				
-				
-				this.wsReconnectTimer = setTimeout(() => {
-					this.connectWebSocket();
-				}, delay);
-			},
+// 计划重连
+		scheduleWSReconnect() {
+			// 清除之前的重连计划
+			if (this.wsReconnectTimer) {
+				clearTimeout(this.wsReconnectTimer);
+				this.wsReconnectTimer = null;
+			}
+			
+			// 检查是否达到最大重连次数（减少重试次数，避免长时间重连）
+			if (this.wsReconnectAttempts >= this.wsMaxReconnectAttempts) {
+				console.warn('WebSocket重连已达最大次数，将使用轮询作为备用方案');
+				return;
+			}
+			
+			this.wsReconnectAttempts++;
+			const delay = Math.min(1000 * Math.pow(2, this.wsReconnectAttempts), 30000); // 指数退避，最大30秒
+			
+			console.log(`WebSocket将在 ${delay}ms 后进行第 ${this.wsReconnectAttempts} 次重连`);
+			
+			this.wsReconnectTimer = setTimeout(() => {
+				this.connectWebSocket();
+			}, delay);
+		},
 			
 			// 断开WebSocket连接
 			disconnectWebSocket() {
-				// 断开原生WebSocket连接（保持兼容）
 				if (this.socketTask) {
 					this.socketTask.close({
 						success: () => {
@@ -4061,27 +3991,13 @@
 					this.socketTask = null;
 				}
 				
-				// 断开STOMP客户端连接
-				if (this.stompClient && this.stompClient.disconnect) {
-					this.stompClient.disconnect();
-					this.stompClient = null;
-				}
-				
-				// 清理订阅
-				this.stompSubscriptions.forEach(sub => {
-					if (sub && sub.unsubscribe) {
-						sub.unsubscribe();
-					}
-				});
-				this.stompSubscriptions = [];
-				
 				this.stopWSHeartbeat();
 				
 				if (this.wsReconnectTimer) {
 					clearTimeout(this.wsReconnectTimer);
 					this.wsReconnectTimer = null;
 				}
-			},
+		}
 	}
 	}
 </script>
@@ -4235,6 +4151,43 @@
 	.play-button:hover {
 		transform: scale(1.05);
 		box-shadow: 0 6rpx 20rpx rgba(0, 0, 0, 0.4), 0 0 0 2rpx rgba(255, 255, 255, 0.3);
+	}
+	
+	/* 录播按钮 - 视频右上角，调整到下方避免遮挡投票条 */
+	.recording-button {
+		position: absolute !important;
+		top: 100rpx !important;
+		right: 20rpx !important;
+		width: 120rpx !important;
+		height: 60rpx !important;
+		background: linear-gradient(135deg, #00ffff, #0080ff) !important;
+		border: 2rpx solid rgba(0, 255, 255, 0.8) !important;
+		border-radius: 30rpx !important;
+		display: flex !important;
+		align-items: center !important;
+		justify-content: center !important;
+		box-shadow: 0 4rpx 15rpx rgba(0, 0, 0, 0.3) !important;
+		transition: all 0.3s ease !important;
+		z-index: 9999 !important;
+		pointer-events: auto !important;
+		backdrop-filter: blur(10rpx);
+	}
+	
+	.recording-btn-text {
+		color: #000000 !important;
+		font-size: 24rpx !important;
+		font-weight: bold !important;
+		line-height: 1 !important;
+	}
+	
+	.recording-button:active {
+		transform: scale(0.95);
+		box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.2), 0 0 0 1rpx rgba(0, 255, 255, 0.2);
+	}
+	
+	.recording-button:hover {
+		transform: scale(1.05);
+		box-shadow: 0 6rpx 20rpx rgba(0, 0, 0, 0.4), 0 0 0 2rpx rgba(0, 255, 255, 0.3);
 	}
 	
 	.play-icon-img {
