@@ -926,11 +926,11 @@
 				// 将导入的 apiService 赋值给 this.apiService，方便在方法中使用
 				this.apiService = apiService;
 				
-				// 从配置文件获取当前服务器地址
-				const configUrl = API_BASE_URL || 'http://192.168.31.249:8081';
-				
-				// 更新API服务配置为本地服务器
-				apiService.updateConfig(configUrl);
+// 从配置文件获取当前服务器地址（使用网关地址）
+			const configUrl = API_BASE_URL || 'https://live-debate-gateway-production.up.railway.app';
+			
+			// 更新API服务配置
+			apiService.updateConfig(configUrl);
 				
 				// 获取当前服务器信息
 				this.apiServerInfo = apiService.getCurrentServerInfo();
@@ -1195,10 +1195,10 @@
 						}
 					}
 					
-					// 3. 使用中间层代理地址（开发环境）
-					// 将 SRS 服务器地址改为通过中间层代理访问
+					// 3. 使用网关地址代理（生产环境）
+					// 将 SRS 服务器地址改为通过网关代理访问
 					if (hlsUrl.includes('192.168.31.189:8086')) {
-						const middlewareServerUrl = 'http://192.168.31.249:8081';
+						const middlewareServerUrl = API_BASE_URL || 'https://live-debate-gateway-production.up.railway.app';
 						const originalUrl = hlsUrl;
 						hlsUrl = hlsUrl.replace('http://192.168.31.189:8086', middlewareServerUrl);
 					}
@@ -1712,7 +1712,7 @@
 						
 						uni.showModal({
 							title: '⚠️ 权限配置问题',
-							content: 'live-player 组件需要配置微信公众平台权限。\n\n✅ 请登录微信公众平台：\n1. 开发 -> 开发管理 -> 开发设置\n2. 添加服务器域名：http://192.168.31.249:8081\n3. 检查服务类目是否包含"视频"或"直播"\n\n如果仍然无法使用，可能需要升级小程序主体类型（个人 -> 企业）。',
+							content: 'live-player 组件需要配置微信公众平台权限。\n\n✅ 请登录微信公众平台：\n1. 开发 -> 开发管理 -> 开发设置\n2. 添加服务器域名：https://live-debate-gateway-production.up.railway.app\n3. 检查服务类目是否包含"视频"或"直播"\n\n如果仍然无法使用，可能需要升级小程序主体类型（个人 -> 企业）。',
 							showCancel: false,
 							confirmText: '我知道了'
 						});

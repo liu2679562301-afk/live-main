@@ -990,8 +990,8 @@ class ApiService {
     const baseUrl = this.baseURL || API_BASE_URL || 'http://192.168.31.249:8081';
     const wsProtocol = baseUrl.startsWith('https') ? 'wss' : 'ws';
     const wsHost = baseUrl.replace(/^https?:\/\//, '');
-    // WebSocket 路径是 /ws（不是 /api/v1/ws）
-    return `${wsProtocol}://${wsHost}/ws`;
+    // 使用原生WebSocket端点 /ws-native（不是STOMP端点 /ws）
+    return `${wsProtocol}://${wsHost}/ws-native`;
   }
 
   /**
