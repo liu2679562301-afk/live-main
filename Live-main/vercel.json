@@ -1,0 +1,20 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://live-debate-gateway-production.up.railway.app/api/:path*"
+    },
+    {
+      "source": "/ws",
+      "destination": "https://live-debate-gateway-production.up.railway.app/ws"
+    },
+    {
+      "source": "/ws-native",
+      "destination": "https://live-debate-backend-production.up.railway.app/ws-native"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/"
+    }
+  ]
+}
